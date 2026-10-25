@@ -129,7 +129,7 @@ footer a{color:var(--fg)}
   else{
     var done=false,first=function(){if(!done){done=true;render(false);}};
     setTimeout(first,1500);
-    fetch('/api/site',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(s){if(s&&s.v===1)site=s;}).catch(function(){}).then(function(){if(done)render(false);else first();});
+    fetch('/api/site',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(s){if(s&&s.v===1)site=s;else{try{var l=JSON.parse(localStorage.getItem('lh-pub')||'null');if(l&&l.v===1)site=l;}catch(e){}}}).catch(function(){}).then(function(){if(done)render(false);else first();});
   }
 })();
 </script>
