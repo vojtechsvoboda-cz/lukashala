@@ -67,7 +67,7 @@ async function api(req, env, url) {
     await env.KV.put('pub', snap); await env.KV.put('draft', snap); await env.KV.put('hist:' + t, snap);
     let hist = await readJSON(env, 'hist', []);
     hist.unshift({ t, msgs: (b.msgs || []).slice(0, 20), key: 'hist:' + t });
-    const drop = hist.slice(16); hist = hist.slice(0, 16);
+    const drop = hist.slice(3); hist = hist.slice(0, 3);   // the live version + two previous ones
     await env.KV.put('hist', JSON.stringify(hist));
     await Promise.all(drop.map(h => env.KV.delete(h.key)));
     return json({ ok: true, hist });
