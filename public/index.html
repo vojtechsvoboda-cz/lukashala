@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lukáš Hála · Photography</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400;500&display=swap" rel="stylesheet">
+<style id="lhcss"></style>
+<style>
+/* Editorial portfolio after emeisdeubel.com: centered masthead, comma category nav, bottom-aligned rows of photos in size steps */
+:root{--bg:#fff;--fg:#000;--muted:#7a7a7a;--serif:'Instrument Serif','Canela',Georgia,serif;--sans:'Libre Franklin','GT America',system-ui,sans-serif;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#fff;--fg:#000}}
+:root[data-theme="dark"]{--bg:#fff;--fg:#000}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--fg);font:400 14.4px/1.8 var(--sans);letter-spacing:.04em;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.u{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:rgba(0,0,0,.35);transition:text-decoration-color .2s}
+.u:hover,.u.on{text-decoration-color:#000}
+.top{text-align:center;padding:24px 20px 0}
+.top b{font-weight:400;text-transform:uppercase}
+.mast{text-align:center;padding:56px 20px 0}
+.mast h1{font:400 clamp(40px,5vw,52px)/1.2 var(--serif);letter-spacing:-.01em}
+.mast em{display:block;font:italic 400 clamp(25px,3vw,31px)/1.2 var(--serif);letter-spacing:-.01em}
+.cats{text-align:center;padding:30px 20px 0}
+.cats a{white-space:nowrap}
+main{padding:clamp(56px,9vw,110px) 0 40px;transition:opacity .45s ease}
+body.viewing .mast,body.viewing .cats{display:none}
+body.viewing main{padding-top:0}
+main.out{opacity:0}
+footer{text-align:center;padding:40px 20px 48px;color:var(--muted);font-size:12.5px}
+footer a{color:var(--fg)}
+/* viewer */
+.vw{position:relative;min-height:calc(100vh - 70px);display:flex;flex-direction:column;align-items:center;padding:28px 20px 40px}
+.vw-h{width:min(1100px,100%);display:flex;justify-content:space-between;align-items:center;text-transform:uppercase}
+.vw-x{font-size:26px;line-height:1;padding:4px 8px;cursor:pointer;background:none;border:0;color:inherit}
+.vw-stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:24px 0;cursor:e-resize;user-select:none}
+.vw-stage.prev{cursor:w-resize}
+.vw-stage img{max-width:min(1000px,100%);max-height:calc(100vh - 230px);width:auto;height:auto;display:block;transition:opacity .35s}
+.vw-cap{color:var(--muted);text-align:center;letter-spacing:.03em}
+.vw-f{display:flex;gap:28px;align-items:center;margin-top:10px}
+/* info */
+.info{width:min(640px,calc(100vw - 40px));margin:0 auto;text-align:center}
+.info p.bio{font:400 clamp(22px,2.6vw,28px)/1.35 var(--serif);letter-spacing:0}
+.info h2{font:400 12.5px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:56px 0 16px}
+.info ul{list-style:none;padding:0}
+.info li{line-height:2}
+@media (max-width:700px){
+  .mast{padding-top:40px}
+  .top{font-size:13px;padding-top:18px}
+  .vw-stage{cursor:default}
+}
+</style>
+</head>
+<body>
+<p class="top" id="top">Photographer based in the heart of Europe, working with brands in <a class="u" href="#/portrait">Portrait</a>, <a class="u" href="#/fashion">Fashion</a>, <a class="u" href="#/sport">Sport</a> and <a class="u" href="#/automotive">Automotive</a>. <a class="u" href="#/info">Work with me.</a></p>
+<header class="mast"><h1><a href="#/">Lukáš Hála</a></h1><em>Production Imaginis</em></header>
+<nav class="cats" id="cats"></nav>
+<main id="main"></main>
+<footer id="foot"></footer>
+<script src="/data.js"></script>
+<script src="/site.js"></script>
+<script>
+(function(){
+  document.getElementById('lhcss').textContent=LH.CSS;
+  var D=LH.D, BASE='/img/', PREVIEW=/[?&]preview=1/.test(location.search);
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var site=load();
+  function load(){
+    return LH.defaultSite();
+  }
+  function catName(c){if(c==='overview')return 'Overview';for(var i=0;i<D.cats.length;i++)if(D.cats[i][0]===c)return D.cats[i][1];return c;}
+  function route(){var h=(location.hash||'#/').slice(2).split('/');return {cat:h[0]||'overview',photo:h[1]||null};}
+  function seq(cat){var a=[];(site.layouts[cat]||[]).forEach(function(r){r.items.forEach(function(it){a.push(it.id);});});return a;}
+  function nav(cur){
+    document.getElementById('cats').innerHTML=[['overview','Overview']].concat(D.cats).map(function(c){
+      return '<a class="u'+(c[0]===cur?' on':'')+'" href="#/'+(c[0]==='overview'?'':c[0])+'">'+c[1]+'</a>';
+    }).join(', ');
+  }
+  function foot(){
+    var i=site.info;
+    document.getElementById('foot').innerHTML='<a class="u" href="mailto:'+i.email+'">'+i.email+'</a>, <a class="u" href="https://instagram.com/'+i.instagram+'" target="_blank" rel="noopener">Instagram</a>, <a class="u" href="https://instagram.com/'+i.agency+'" target="_blank" rel="noopener">Production Imaginis</a><br>Website by vojtechsvoboda.cz';
+  }
+  function grid(cat){
+    if(cat!=='overview'&&!site.layouts[cat])LH.syncLayout(site,cat);
+    return LH.rowsHtml(site,site.layouts[cat]||[],{base:BASE,lazy:!PREVIEW,href:function(it){return '#/'+cat+'/'+it.id;}});
+  }
+  function viewer(cat,id){
+    var s=seq(cat),i=Math.max(0,s.indexOf(id)),p=LH.projectOf(site,id);
+    var cap=p?(p.title+' — '+p.client+(p.year?', '+p.year:'')):'';
+    return '<section class="vw"><div class="vw-h"><span>Lukáš Hála – '+catName(cat)+'</span><a class="vw-x" href="#/'+(cat==='overview'?'':cat)+'" aria-label="Close">×</a></div>'+
+      '<div class="vw-stage" id="stage"><img src="'+LH.src(site,id,BASE)+'" alt="'+cap.replace(/"/g,'')+'"></div>'+
+      '<p class="vw-cap">'+cap+'</p><div class="vw-f"><a class="u" href="#/'+(cat==='overview'?'':cat)+'">View all</a><span>'+(i+1)+'/'+s.length+'</span></div></section>';
+  }
+  function info(){
+    var i=site.info;
+    return '<section class="info"><p class="bio">'+i.bio+'</p><h2>Selected clients</h2><ul>'+i.clients.map(function(c){return '<li>'+c+'</li>';}).join('')+
+      '</ul><h2>Contact</h2><ul><li><a class="u" href="mailto:'+i.email+'">'+i.email+'</a></li><li><a class="u" href="https://instagram.com/'+i.instagram+'" target="_blank" rel="noopener">@'+i.instagram+'</a></li><li>Production by <a class="u" href="https://instagram.com/'+i.agency+'" target="_blank" rel="noopener">Production Imaginis</a></li></ul></section>';
+  }
+  var main=document.getElementById('main'),last=null;
+  function render(fade){
+    var r=route(),key=r.cat+'/'+(r.photo||'');
+    var html=r.cat==='info'?info():(r.photo?viewer(r.cat,r.photo):grid(r.cat));
+    nav(r.cat==='info'?'':r.cat); foot();
+    var setMode=function(){document.body.classList.toggle('viewing',!!r.photo);};
+    var go=function(){setMode();main.innerHTML=html;main.classList.remove('out');if(!PREVIEW&&last!==null&&!r.photo)window.scrollTo(0,0);if(r.photo)window.scrollTo(0,0);last=key;bindViewer(r);};
+    if(fade&&!reduce&&!PREVIEW&&last!==key){main.classList.add('out');setTimeout(go,260);}else go();
+  }
+  function bindViewer(r){
+    var st=document.getElementById('stage');if(!st)return;
+    var s=seq(r.cat),i=s.indexOf(r.photo);
+    function step(d){if(!s.length)return;location.hash='#/'+r.cat+'/'+s[(i+d+s.length)%s.length];}
+    st.onmousemove=function(e){var b=st.getBoundingClientRect();st.classList.toggle('prev',e.clientX<b.left+b.width/2);};
+    st.onclick=function(e){var b=st.getBoundingClientRect();step(e.clientX<b.left+b.width/2?-1:1);};
+    document.onkeydown=function(e){if(e.key==='ArrowRight')step(1);else if(e.key==='ArrowLeft')step(-1);else if(e.key==='Escape')location.hash='#/'+(r.cat==='overview'?'':r.cat);};
+  }
+  addEventListener('hashchange',function(){render(true);});
+  /* published content from the server; the built-in default shows until it arrives (or if nothing is published yet) */
+  /* live preview from the admin: it posts the whole draft site plus which page to show */
+  addEventListener('message',function(e){
+    var d=e.data;if(!d||d.type!=='lh-site')return;
+    site=d.site; if(d.route!=null&&location.hash!=='#/'+d.route){history.replaceState(null,'','#/'+d.route);}
+    render(false);
+  });
+  /* published content from the server; the built-in default is used if nothing is published yet */
+  if(PREVIEW){render(false);parent.postMessage({type:'lh-ready'},'*');}
+  else{
+    var done=false,first=function(){if(!done){done=true;render(false);}};
+    setTimeout(first,1500);
+    fetch('/api/site',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(s){if(s&&s.v===1)site=s;}).catch(function(){}).then(function(){if(done)render(false);else first();});
+  }
+})();
+</script>
+</body>
+</html>

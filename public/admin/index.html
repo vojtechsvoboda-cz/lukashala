@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Administrace · Lukáš Hála</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400&display=swap" rel="stylesheet">
+<style id="lhcss"></style>
+<style>
+/* Light, quiet admin that matches the white website.
+   Layout editor: "Plátno" = Framer-like canvas (desktop artboard you edit + live tablet and phone frames beside it),
+   "Základní" = rows with sliders and a live preview. Both write the same layout model. */
+:root{--bg:#f4f4f2;--panel:#fff;--side:#fafaf8;--line:#e6e5e1;--line-2:#d9d8d3;--fg:#141414;--fg-2:#5f5e5a;--fg-3:#97958f;--acc:#141414;--sel:#0a84ff;--ok:#1f9d55;--warn:#c4781a;--canvas:#e9e8e4;--r:12px;
+  --ui:'Inter',system-ui,-apple-system,sans-serif;--serif:'Instrument Serif',Georgia,serif;--sans:'Libre Franklin',system-ui,sans-serif;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#f4f4f2;--fg:#141414}}
+:root[data-theme="dark"]{--bg:#f4f4f2;--fg:#141414}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:400 14px/1.45 var(--ui);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+.ico{width:16px;height:16px;flex:0 0 auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 13px;border-radius:9px;border:1px solid var(--line-2);background:#fff;font-weight:500;font-size:13.5px;white-space:nowrap;text-decoration:none;transition:background .15s,border-color .15s,opacity .15s}
+.btn:hover{background:#f4f4f2}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.pri:hover{background:#2c2c2c}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:8px}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:#ecebe8}
+.btn.danger{color:#b42318}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-size:12.5px;color:var(--fg-2);font-weight:500}
+.inp{width:100%;height:38px;padding:0 12px;border:1px solid var(--line-2);border-radius:9px;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+textarea.inp{height:auto;padding:10px 12px;resize:vertical;line-height:1.5}
+.inp:focus{border-color:#8a8984;box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+.seg{display:inline-flex;background:#efeeeb;border-radius:9px;padding:2px;gap:2px;flex:0 0 auto}
+.seg button{height:28px;min-width:30px;padding:0 9px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--fg-2);display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+.seg button:hover{color:var(--fg)}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg button svg{width:15px;height:15px}
+.chip{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:99px;background:#efeeeb;color:var(--fg-2);font-size:12px;font-weight:500;white-space:nowrap}
+.muted{color:var(--fg-2)}.dim{color:var(--fg-3)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.hint{font-size:12.5px;color:var(--fg-3)}
+.hint b{color:var(--fg-2)}
+
+/* login */
+.login{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:var(--bg)}
+.login form{width:min(380px,100%);display:flex;flex-direction:column;gap:14px;padding:32px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 30px 60px -40px rgba(0,0,0,.35)}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:34px;height:34px;border-radius:50%;border:1px solid var(--fg);display:grid;place-items:center;font:italic 15px/1 var(--serif);flex:0 0 auto}
+.brand b{font:400 21px/1 var(--serif)}
+.login h1{font-size:20px;font-weight:600;letter-spacing:-.01em;margin-top:10px}
+.err{color:#b42318;font-size:13px;min-height:18px}
+
+/* app shell */
+.app{display:grid;grid-template-columns:220px minmax(0,1fr);height:100vh}
+.side{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 10px 12px;min-height:0}
+.side .brand{padding:4px 8px 16px}
+.side .brand small{display:block;font:400 11.5px/1.2 var(--ui);color:var(--fg-3);margin-top:3px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;text-decoration:none;color:var(--fg-2);font-weight:500}
+.nav a:hover{background:#efeeeb;color:var(--fg)}
+.nav a.on{background:#ebeae6;color:var(--fg)}
+.nav a .n{margin-left:auto;font-size:11.5px;color:var(--fg-3)}
+.side-f{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:12px 8px 0;border-top:1px solid var(--line)}
+.side-f .who{display:flex;align-items:center;gap:9px;font-weight:500}
+.side-f .av{width:28px;height:28px;border-radius:50%;background:#e4e2dd;display:grid;place-items:center;font-size:11.5px;font-weight:600}
+.side-f button{font-size:12px;color:var(--fg-3);text-align:left;text-decoration:underline;text-underline-offset:3px}
+.side-f button:hover{color:var(--fg)}
+.offline{font-size:11.5px;color:var(--warn);line-height:1.4}
+.main{display:flex;flex-direction:column;min-width:0;min-height:0;height:100vh}
+.topbar{flex:0 0 auto;height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px;border-bottom:1px solid var(--line);background:#fff}
+.topbar h2{font-size:15.5px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar h2 a{color:var(--fg-3);text-decoration:none;font-weight:500}
+.topbar h2 a:hover{color:var(--fg)}
+.tb-r{display:flex;align-items:center;gap:10px}
+.status{font-size:12.5px;color:var(--fg-3);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.status i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.status.dirty i{background:var(--warn)}
+.content{flex:1;overflow:auto;min-height:0}
+.page{padding:28px 32px 60px;max-width:1080px}
+.page h3{font-size:13px;font-weight:600;color:var(--fg-2);margin:28px 0 12px;text-transform:uppercase;letter-spacing:.04em}
+.hello{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+.stat{padding:16px 18px}
+.stat b{display:block;font-size:26px;font-weight:600;letter-spacing:-.02em;margin-top:2px}
+.guide li{list-style:none;display:flex;align-items:center;gap:12px;padding:12px 18px;border-top:1px solid var(--line)}
+.guide li:first-child{border-top:0}
+.guide .ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;flex:0 0 auto}
+.guide li.done .ck{background:var(--ok);border-color:var(--ok);color:#fff}
+.guide li.done .t{color:var(--fg-3);text-decoration:line-through}
+.guide .t{flex:1}
+.prow{display:grid;grid-template-columns:56px minmax(0,1fr) 110px 70px 28px;align-items:center;gap:14px;padding:10px 14px;border-top:1px solid var(--line);text-decoration:none;transition:background .15s}
+.prow:first-child{border-top:0}
+.prow:hover{background:#fafaf8}
+.prow img{width:56px;height:42px;object-fit:cover;border-radius:6px;background:#eee}
+.prow .tt b{display:block;font-weight:600}
+.prow .tt span{font-size:12.5px;color:var(--fg-3)}
+.prow .cnt{font-size:12.5px;color:var(--fg-3);text-align:right}
+.form2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.form2 .full{grid-column:1/-1}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.th{position:relative;border-radius:9px;overflow:hidden;background:#eee;aspect-ratio:1;cursor:grab;border:1px solid var(--line)}
+.th img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.th .x{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;opacity:0;transition:opacity .15s}
+.th:hover .x,.th:focus-within .x{opacity:1}
+.th .no{position:absolute;left:6px;bottom:6px;font-size:11px;font-weight:600;background:rgba(255,255,255,.92);border-radius:6px;padding:1px 6px}
+.th.over{outline:2px solid var(--sel);outline-offset:2px}
+.th.dragging{opacity:.35}
+.th.add{display:grid;place-items:center;cursor:pointer;background:#fafaf8;border:1.5px dashed var(--line-2);color:var(--fg-2);font-weight:500;font-size:13px;text-align:center}
+.th.add:hover{border-color:#9b9a95;color:var(--fg)}
+
+/* layout editor shell */
+.lay{display:grid;grid-template-columns:minmax(0,1fr) 312px;height:100%;min-height:0}
+.lay-l{display:flex;flex-direction:column;min-width:0;min-height:0}
+.lay-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);background:#fff;flex-wrap:wrap}
+.lay-bar .grp{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;flex-wrap:wrap}
+.tabs a{height:30px;display:inline-flex;align-items:center;padding:0 11px;border-radius:8px;text-decoration:none;font-weight:500;font-size:13px;color:var(--fg-2)}
+.tabs a:hover{background:#f1f0ed}
+.tabs a.on{background:#141414;color:#fff}
+.lay-r{border-left:1px solid var(--line);background:#fff;display:flex;flex-direction:column;min-height:0;overflow:auto}
+.pane{padding:16px 18px;border-bottom:1px solid var(--line)}
+.pane h4{font-size:12px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ib{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--fg-2);flex:0 0 auto}
+.ib:hover{background:#efeeeb;color:var(--fg)}
+.ib:disabled{opacity:.3;cursor:default;background:none}
+.ib svg{width:15px;height:15px}
+
+/* canvas: artboards side by side like Framer breakpoints */
+.cv{flex:1;overflow:auto;min-height:0;position:relative;background-color:var(--canvas);
+  background-image:radial-gradient(circle,rgba(0,0,0,.07) 1px,transparent 1.2px);background-size:22px 22px;cursor:default}
+.cv.panning{cursor:grabbing}
+.stage{position:relative}
+.frames{position:absolute;left:0;top:0;transform-origin:0 0;display:flex;align-items:flex-start;gap:120px;padding:72px 90px 120px}
+.fr{flex:0 0 auto;position:relative}
+.fr-l{position:absolute;left:0;bottom:100%;margin-bottom:18px;display:flex;align-items:center;gap:12px;font:500 34px/1 var(--ui);color:var(--fg-2);white-space:nowrap}
+.fr-l b{color:var(--fg);font-weight:600}
+.fr-l .tag{font-size:26px;color:var(--sel);background:rgba(10,132,255,.1);padding:5px 10px;border-radius:8px}
+.fr iframe{display:block;border:0;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08),0 24px 60px -30px rgba(0,0,0,.3);pointer-events:none}
+.fr.mob iframe{border-radius:36px;outline:12px solid #1b1b1b}
+.fr.tab iframe{border-radius:20px;outline:12px solid #1b1b1b}
+.board{width:1280px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08),0 24px 60px -30px rgba(0,0,0,.3);position:relative;padding-bottom:80px;font:400 14.4px/1.8 var(--sans);letter-spacing:.04em;outline:3px solid transparent;transition:outline-color .2s}
+.board:hover{outline-color:rgba(10,132,255,.25)}
+.board .bm{text-align:center;padding:24px 0 100px;pointer-events:none}
+.board .bm h1{font:400 52px/1.2 var(--serif);letter-spacing:-.01em;margin-top:56px}
+.board .bm em{display:block;font:italic 400 31px/1.2 var(--serif)}
+.board .bm nav{margin-top:30px}
+.board .bm u{text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:rgba(0,0,0,.35)}
+.board .bm u.on{text-decoration-color:#000}
+.board .lh-rows{width:1024px}
+.board .lh-row{position:relative;flex-wrap:nowrap;margin-bottom:64px}
+.board .lh-row[data-g="s"]{margin-bottom:28px}.board .lh-row[data-g="l"]{margin-bottom:128px}
+.board .lh-row.rsel::before{content:"";position:absolute;inset:-14px -20px;border:2px dashed rgba(10,132,255,.45);border-radius:6px;pointer-events:none}
+.board .lh-ph{position:relative;cursor:grab;touch-action:none}
+.board .lh-ph img{pointer-events:none}
+.board .lh-ph:hover::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 3px rgba(10,132,255,.5)}
+.board .lh-ph.sel::after{content:"";position:absolute;inset:-4px;border:4px solid var(--sel)}
+.board .lh-ph.dragging{opacity:.22}
+.board .lh-ph.dragging::after{display:none}
+.hdl{position:absolute;width:22px;height:22px;background:#fff;border:4px solid var(--sel);border-radius:5px;z-index:3}
+.hdl.tl{left:-13px;top:-13px;cursor:nwse-resize}.hdl.tr{right:-13px;top:-13px;cursor:nesw-resize}
+.hdl.bl{left:-13px;bottom:-13px;cursor:nesw-resize}.hdl.br{right:-13px;bottom:-13px;cursor:nwse-resize}
+.hdl.ml{left:-13px;top:50%;margin-top:-22px;height:44px;cursor:ew-resize;border-radius:11px}.hdl.mr{right:-13px;top:50%;margin-top:-22px;height:44px;cursor:ew-resize;border-radius:11px}
+.szl{position:absolute;left:50%;bottom:calc(100% + 18px);transform:translateX(-50%);background:var(--sel);color:#fff;font:600 19px/1 var(--ui);letter-spacing:0;padding:8px 12px;border-radius:9px;white-space:nowrap;z-index:3;pointer-events:none}
+.rtool{position:absolute;left:-96px;bottom:0;display:flex;opacity:0;transition:opacity .15s;font-family:var(--ui);letter-spacing:0}
+.lh-row:hover .rtool,.lh-row.rsel .rtool{opacity:1}
+.rtool .seg{flex-direction:column;transform:scale(1.5);transform-origin:0 100%}
+.ind{position:absolute;background:var(--sel);border-radius:4px;pointer-events:none;z-index:5}
+.ind.h::after{content:"Nový řádek";position:absolute;left:50%;top:-38px;transform:translateX(-50%);background:var(--sel);color:#fff;font:600 19px/1 var(--ui);letter-spacing:0;padding:8px 12px;border-radius:9px;white-space:nowrap}
+.ghost{position:fixed;z-index:999;pointer-events:none;opacity:.88;box-shadow:0 20px 40px -10px rgba(0,0,0,.45);transform:rotate(-1.5deg);border-radius:3px;overflow:hidden}
+.ghost img{width:100%;height:100%;object-fit:cover;display:block}
+.zoom{display:flex;align-items:center;gap:2px;background:#efeeeb;border-radius:9px;padding:2px}
+.zoom span{min-width:46px;text-align:center;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.zoom button{height:28px;min-width:28px;border-radius:7px;display:grid;place-items:center;font-weight:600;color:var(--fg-2);padding:0 8px;font-size:12.5px}
+.zoom button:hover{background:#fff;color:var(--fg)}
+.togs{display:flex;gap:4px}
+.tog{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line-2);font-size:12.5px;font-weight:500;color:var(--fg-2);background:#fff}
+.tog[aria-pressed="true"]{border-color:var(--fg);color:var(--fg)}
+.tog svg{width:15px;height:15px}
+/* inspector */
+.insp{display:flex;flex-direction:column;gap:16px}
+.insp .who{display:flex;gap:12px;align-items:center}
+.insp .who img{width:52px;height:52px;object-fit:cover;border-radius:8px}
+.insp .who b{display:block;font-weight:600}
+.ctl{display:flex;flex-direction:column;gap:7px}
+.ctl>span{font-size:12.5px;color:var(--fg-2);font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.wrow{display:flex;align-items:center;gap:10px}
+.num{display:flex;align-items:center;border:1px solid var(--line-2);border-radius:8px;height:30px;overflow:hidden;flex:0 0 auto}
+.num input{width:46px;border:0;text-align:right;outline:none;font-variant-numeric:tabular-nums;height:100%;padding:0 2px}
+.num span{padding:0 8px 0 2px;color:var(--fg-3);font-size:12.5px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:9px;background:#e4e3df;outline:none;margin:10px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--fg);cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--fg);cursor:grab}
+.ticks{position:relative;height:16px;margin-top:-6px}
+.ticks button{position:absolute;transform:translateX(-50%);font-size:10.5px;font-weight:600;color:var(--fg-3);padding:0 3px;border-radius:4px}
+.ticks button:hover,.ticks button.on{color:var(--fg);background:#efeeeb}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+.tips{display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--fg-2);padding:0}
+.tips li{list-style:none;display:flex;gap:9px;line-height:1.45}
+.tips kbd{font:500 11.5px var(--ui);background:#f1f0ed;border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+/* basic mode */
+.lay.basic{grid-template-columns:minmax(380px,0.95fr) minmax(0,1.05fr)}
+.flist{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--bg);min-height:0}
+.rcard{background:#fff;border:1px solid var(--line);border-radius:12px}
+.rcard-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px 8px 14px;background:#fafaf8;border-bottom:1px solid var(--line);font-weight:600;font-size:13px;border-radius:12px 12px 0 0;flex-wrap:wrap}
+.fit{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
+.fit:first-of-type{border-top:0}
+.fit img{width:48px;height:48px;object-fit:cover;border-radius:6px;grid-row:span 2}
+.fit .nm{font-size:13px;line-height:1.3;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fit .nm small{color:var(--fg-3);font-size:11.5px;margin-left:6px}
+.fit .mv{display:flex;gap:2px;grid-row:span 2;align-self:center}
+.fit .sl{display:flex;align-items:center;gap:10px}
+.fit .sl b{font-size:12px;font-weight:600;min-width:62px;font-variant-numeric:tabular-nums;color:var(--fg-2)}
+.fit input[type=range]{margin:6px 0}
+.flash{animation:flash 1s ease}
+@keyframes flash{0%{background:#fff6d6}100%{background:transparent}}
+.pvwrap{flex:1;display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:4px 0 10px}
+.pv-d{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fff;flex:0 0 auto}
+.pv-d iframe{border:0;display:block;transform-origin:0 0;background:#fff;pointer-events:none}
+.pv-d.dev{border:10px solid #1b1b1b;border-radius:30px}
+/* modal + toast */
+.ov{position:fixed;inset:0;background:rgba(20,20,20,.35);display:grid;place-items:center;padding:20px;z-index:100;opacity:0;transition:opacity .2s}
+.ov.open{opacity:1}
+.dlg{width:min(560px,100%);max-height:calc(100vh - 40px);overflow:auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 30px 80px -30px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:16px;transform:translateY(8px);transition:transform .25s}
+.ov.open .dlg{transform:none}
+.dlg h3{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.dlg .acts{justify-content:flex-end}
+.up{display:flex;flex-direction:column;gap:8px}
+.upr{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.upr img{width:40px;height:40px;object-fit:cover;border-radius:6px;background:#eee}
+.upr small{display:block;color:var(--fg-3);font-size:12px}
+.bar{height:4px;border-radius:9px;background:#efeeeb;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;width:0;background:var(--fg);transition:width .5s}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.pick label{position:relative;cursor:pointer;border-radius:8px;overflow:hidden;aspect-ratio:1;border:3px solid transparent}
+.pick input{position:absolute;opacity:0}
+.pick img{width:100%;height:100%;object-fit:cover;display:block}
+.pick label:has(input:checked){border-color:var(--sel)}
+.drop{border:1.5px dashed var(--line-2);border-radius:12px;padding:20px;text-align:center;color:var(--fg-2);display:flex;flex-direction:column;gap:10px;align-items:center}
+.drop.over{border-color:var(--sel);background:#f2f8ff}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:#141414;color:#fff;padding:11px 16px;border-radius:11px;font-size:13.5px;opacity:0;transition:opacity .25s,transform .25s;z-index:200;display:flex;gap:12px;align-items:center;max-width:calc(100vw - 32px);pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast a{color:#9fd0ff;font-weight:500}
+.hist li{list-style:none;display:flex;gap:14px;align-items:flex-start;padding:14px 18px;border-top:1px solid var(--line)}
+.hist li:first-child{border-top:0}
+.hist .dt{font-size:12.5px;color:var(--fg-3);min-width:110px}
+.hist ul{padding-left:16px;color:var(--fg-2);font-size:13px;flex:1}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 6px 0 10px;border-radius:99px;background:#efeeeb;font-size:13px}
+.tags span button{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:var(--fg-3)}
+.tags span button:hover{background:#dedcd7;color:var(--fg)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 340px;height:100%;min-height:0}
+@media (max-width:1000px){.lay{grid-template-columns:minmax(0,1fr) 270px}.lay.basic{grid-template-columns:1fr}.lay.basic .lay-r{border-left:0;border-top:1px solid var(--line)}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr;height:auto;min-height:100vh}
+  .side{flex-direction:row;align-items:center;gap:8px;padding:8px 10px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .side .brand{padding:0 8px 0 2px}.side .brand small{display:none}
+  .nav{flex-direction:row}.nav a{white-space:nowrap}.nav a .n{display:none}
+  .side-f{display:none}
+  .main{height:auto;min-height:calc(100vh - 54px)}
+  .content{overflow:visible}
+  .page{padding:20px 16px 40px}
+  .stats{grid-template-columns:1fr 1fr}
+  .lay,.split{grid-template-columns:1fr;height:auto}
+  .cv{min-height:70vh}
+  .lay-r{border-left:0;border-top:1px solid var(--line)}
+  .flist{overflow:visible}
+  .prow{grid-template-columns:48px minmax(0,1fr) 28px}.prow .chip,.prow .cnt{display:none}
+  .form2{grid-template-columns:1fr}
+  .topbar{padding:0 12px}.status{display:none}
+}
+</style>
+</head>
+<body>
+<div class="login" id="login" hidden>
+  <form id="lf" autocomplete="on">
+    <div class="brand"><span class="mark">LH</span><b>Lukáš Hála</b></div>
+    <h1>Přihlášení do administrace</h1>
+    <label class="field"><span>Heslo</span><input class="inp" id="lpw" type="password" autocomplete="current-password" required></label>
+    <button class="btn pri" type="submit" style="height:40px">Přihlásit</button>
+    <p class="err" id="lerr" role="alert"></p>
+    <p class="hint">Ukázková administrace. Heslo ti řekne Vojta. Přihlášení vydrží 30 dní.</p>
+  </form>
+</div>
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <div class="brand"><span class="mark">LH</span><div><b>Lukáš Hála</b><small>Administrace webu</small></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-f">
+      <div class="who"><span class="av">LH</span>Lukáš</div>
+      <p class="offline" id="offline" hidden>Server neodpovídá. Změny se ukládají jen v tomto prohlížeči.</p>
+      <button type="button" id="logout">Odhlásit</button>
+      <button type="button" id="reset">Vrátit ukázku do výchozího stavu</button>
+    </div>
+  </aside>
+  <section class="main">
+    <header class="topbar"><h2 id="title"></h2><div class="tb-r"><span class="status" id="status"></span><a class="btn" href="/" target="_blank" rel="noopener">Zobrazit web</a><button class="btn pri" type="button" id="publish">Zveřejnit</button></div></header>
+    <div class="content" id="content"></div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<input type="file" id="file" accept="image/*" multiple hidden>
+<script src="/data.js"></script>
+<script src="/site.js"></script>
+<script>
+(function(){
+  document.getElementById('lhcss').textContent=LH.CSS;
+  var D=LH.D, IMG='/img/';
+  var $=function(id){return document.getElementById(id);};
+  var $$=function(s,r){return [].slice.call((r||document).querySelectorAll(s));};
+  var esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var LS={get:function(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}};
+  var qMode=(/[?&]mode=(canvas|basic)/.exec(location.search)||[])[1];
+  var MODE=qMode||LS.get('lh-mode')||'canvas';
+  var CAT={overview:'Overview'}; D.cats.forEach(function(c){CAT[c[0]]=c[1];});
+  var AL={l:'Vlevo',c:'Na střed',r:'Vpravo',j:'Do bloku'},VA={t:'Nahoru',c:'Na střed',b:'Dolů'},GP={s:'Malá',m:'Běžná',l:'Velká'};
+
+  /* ---------- icons ---------- */
+  var I=function(p){return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';};
+  var IC={
+    home:I('<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'),
+    folder:I('<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>'),
+    grid:I('<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>'),
+    text:I('<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>'),
+    clock:I('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'),
+    up:I('<path d="m18 15-6-6-6 6"/>'),down:I('<path d="m6 9 6 6 6-6"/>'),
+    x:I('<path d="M18 6 6 18M6 6l12 12"/>'),check:I('<path d="M20 6 9 17l-5-5"/>'),
+    plus:I('<path d="M5 12h14M12 5v14"/>'),undo:I('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>'),redo:I('<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>'),
+    split:I('<path d="M3 12h18"/><path d="M8 7 3 12l5 5"/>'),merge:I('<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>'),
+    al:I('<path d="M3 6h18M3 12h12M3 18h16"/>'),ac:I('<path d="M3 6h18M6 12h12M4 18h16"/>'),ar:I('<path d="M3 6h18M9 12h12M5 18h16"/>'),aj:I('<path d="M3 6h18M3 12h18M3 18h18"/>'),
+    vt:I('<path d="M4 3h16"/><rect x="6" y="7" width="4" height="12" rx="1"/><rect x="14" y="7" width="4" height="7" rx="1"/>'),
+    vc:I('<path d="M4 12h2M10 12h4M18 12h2"/><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="8" width="4" height="8" rx="1"/>'),
+    vb:I('<path d="M4 21h16"/><rect x="6" y="5" width="4" height="12" rx="1"/><rect x="14" y="10" width="4" height="7" rx="1"/>'),
+    phone:I('<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>'),tablet:I('<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M12 18h.01"/>'),desk:I('<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/>'),
+    img:I('<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>'),
+    trash:I('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'),
+    left:I('<path d="m15 18-6-6 6-6"/>'),right:I('<path d="m9 18 6-6-6-6"/>'),
+    canvas:I('<path d="M5 3v18M19 3v18M3 5h18M3 19h18"/>'),sliders:I('<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/>')
+  };
+  var ALI={l:IC.al,c:IC.ac,r:IC.ar,j:IC.aj},VAI={t:IC.vt,c:IC.vc,b:IC.vb};
+
+  /* ---------- server ---------- */
+  var OFFLINE=false;
+  function api(path,opt){
+    opt=opt||{};
+    var o={method:opt.method||'GET',credentials:'same-origin',headers:{}};
+    if(opt.body!==undefined){if(opt.raw){o.body=opt.body;o.headers['content-type']=opt.type||'application/octet-stream';}else{o.body=JSON.stringify(opt.body);o.headers['content-type']='application/json';}}
+    return fetch(path,o).then(function(r){
+      return r.json().catch(function(){return null;}).then(function(j){
+        if(r.status===401&&path!=='/api/login'){showLogin('Přihlášení vypršelo, přihlas se prosím znovu.');}
+        if(!r.ok){var e=new Error((j&&j.error)||('Chyba '+r.status));e.status=r.status;throw e;}
+        return j;
+      });
+    });
+  }
+
+  /* ---------- state ---------- */
+  var pub=null,draft=null,hist=[],log=LS.get('lh-log')||[],guide=LS.get('lh-guide')||{};
+  function pubOrDefault(){return pub||LH.defaultSite();}
+  function proj(id){for(var i=0;i<draft.projects.length;i++)if(draft.projects[i].id===id)return draft.projects[i];return null;}
+  function photoProj(id){return LH.projectOf(draft,id);}
+  function th(id){return LH.src(draft,id,IMG);}
+  var saveT=null,saving=false;
+  function save(){
+    LS.set('lh-log',log);status();pushPreview();
+    if(OFFLINE){LS.set('lh-draft',draft);return;}
+    clearTimeout(saveT);status('saving');
+    saveT=setTimeout(flushDraft,1200);
+  }
+  function flushDraft(){
+    clearTimeout(saveT);saveT=null;saving=true;
+    return api('/api/draft',{method:'PUT',body:draft}).then(function(){saving=false;status();},function(e){saving=false;status();if(e.status!==401)toast('Koncept se nepodařilo uložit: '+esc(e.message));});
+  }
+  function note(key,msg){log=log.filter(function(x){return x.k!==key;});log.push({k:key,m:msg});}
+  function dirty(){return JSON.stringify(draft)!==JSON.stringify(pubOrDefault());}
+  function status(st){
+    var d=dirty(),s=$('status');if(!s)return;
+    s.className='status'+(d?' dirty':'');
+    s.innerHTML='<i></i>'+(st==='saving'||saving?'Ukládám koncept…':d?'Koncept uložený · nezveřejněno':'Vše je na webu');
+    $('publish').disabled=!d;
+  }
+  function doGuide(k){if(!guide[k]){guide[k]=1;LS.set('lh-guide',guide);}}
+  var tT;function toast(html,ms){var t=$('toast');t.innerHTML=html;t.classList.add('on');clearTimeout(tT);tT=setTimeout(function(){t.classList.remove('on');},ms||3400);}
+  function fmtT(t){if(typeof t==='string')return t;var d=new Date(t),n=new Date();var hm=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');return d.toDateString()===n.toDateString()?'dnes '+hm:d.getDate()+'. '+(d.getMonth()+1)+'. '+hm;}
+
+  /* ---------- login / boot ---------- */
+  function showLogin(msg){
+    $('app').hidden=true;$('login').hidden=false;$('lerr').textContent=msg||'';
+    setTimeout(function(){$('lpw').focus();},50);
+  }
+  $('lf').addEventListener('submit',function(e){
+    e.preventDefault();$('lerr').textContent='';
+    api('/api/login',{method:'POST',body:{password:$('lpw').value}}).then(function(){$('lpw').value='';loadState();},function(err){$('lerr').textContent=err.status===401?'Nesprávné heslo.':'Server teď neodpovídá: '+err.message;});
+  });
+  function loadState(){
+    return api('/api/state').then(function(s){
+      pub=s.pub&&s.pub.v===1?s.pub:null;draft=s.draft&&s.draft.v===1?s.draft:LH.clone(pubOrDefault());hist=s.hist||[];
+      if(!draft.extra)draft.extra={};
+      boot();
+    });
+  }
+  function boot(){$('login').hidden=true;$('app').hidden=false;$('offline').hidden=!OFFLINE;route();status();}
+  function start(){
+    api('/api/me').then(function(r){if(r&&r.ok)return loadState();showLogin();}).catch(function(e){
+      if(e.status===401)return showLogin();
+      /* no server (local file preview): keep everything in this browser */
+      OFFLINE=true;pub=LS.get('lh-pub');draft=LS.get('lh-draft')||LH.clone(pubOrDefault());hist=LS.get('lh-hist')||[];boot();
+    });
+  }
+
+  /* ---------- shell ---------- */
+  function navHtml(cur){
+    var n=[['prehled','Přehled',IC.home],['projekty','Projekty',IC.folder,draft.projects.length],['rozvrzeni','Rozvržení stránek',IC.grid],['texty','Texty a kontakt',IC.text],['historie','Historie',IC.clock]];
+    $('nav').innerHTML=n.map(function(x){return '<a href="#/'+x[0]+'" class="'+(cur===x[0]?'on':'')+'">'+x[2]+x[1]+(x[3]?'<span class="n">'+x[3]+'</span>':'')+'</a>';}).join('');
+  }
+  function route(){
+    $$('.ov').forEach(function(o){o.remove();});
+    var h=(location.hash||'#/prehled').slice(2).split('/'),p=h[0]||'prehled';
+    navHtml({projekt:'projekty'}[p]||p);
+    $('content').scrollTop=0;frames=[];sel=null;
+    if(p==='projekty')pgProjects();
+    else if(p==='projekt')pgProject(h[1]);
+    else if(p==='rozvrzeni')pgLayout(h[1]||'overview');
+    else if(p==='texty')pgTexts();
+    else if(p==='historie')pgHistory();
+    else pgHome();
+  }
+  addEventListener('hashchange',function(){if(!$('app').hidden)route();});
+
+  /* ---------- přehled ---------- */
+  function pgHome(){
+    $('title').textContent='Přehled';
+    var n=0;draft.projects.forEach(function(p){n+=p.photos.length;});
+    var h=new Date().getHours(),g=h<10?'Dobré ráno':h<18?'Dobré odpoledne':'Dobrý večer';
+    var steps=[['project','Přidej nový projekt a nahraj do něj fotky','#/projekty'],['layout','Uprav rozvržení některé stránky','#/rozvrzeni/'+(guide.lastCat||'sport')],['publish','Zveřejni změny a podívej se na web',null]];
+    $('content').innerHTML='<div class="page"><p class="hello">'+g+', Lukáši</p><p class="muted" style="margin-top:4px">Tady spravuješ obsah webu. Design se tu změnit nedá, takže web nejde rozbít.</p>'+
+      '<div class="stats"><div class="card stat"><span class="muted">Projekty</span><b>'+draft.projects.length+'</b></div><div class="card stat"><span class="muted">Fotky</span><b>'+n+'</b></div><div class="card stat"><span class="muted">Poslední zveřejnění</span><b style="font-size:18px;margin-top:8px">'+esc(hist[0]?fmtT(hist[0].t):'zatím nic')+'</b></div></div>'+
+      '<h3>Vyzkoušej si to</h3><ul class="card guide" style="padding:0">'+steps.map(function(s){return '<li class="'+(guide[s[0]]?'done':'')+'"><span class="ck">'+(guide[s[0]]?IC.check:'')+'</span><span class="t">'+s[1]+'</span>'+(s[2]?'<a class="btn sm" href="'+s[2]+'">Otevřít</a>':'<button class="btn sm" type="button" data-pub>Zveřejnit</button>')+'</li>';}).join('')+'</ul>'+
+      '<h3>Rychlé akce</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="qNew">'+IC.plus+'Nový projekt</button><a class="btn" href="#/rozvrzeni/overview">'+IC.grid+'Upravit úvodní stránku</a><a class="btn" href="#/texty">'+IC.text+'Upravit texty</a></div></div>';
+    $('qNew').onclick=newProject;
+    var pb=$('content').querySelector('[data-pub]');if(pb)pb.onclick=openPublish;
+  }
+
+  /* ---------- projekty ---------- */
+  function pgProjects(){
+    $('title').textContent='Projekty';
+    $('content').innerHTML='<div class="page"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><p class="muted">Pořadí projektů určuje, kam se nové fotky přidají na stránce kategorie.</p><button class="btn pri" type="button" id="pNew">'+IC.plus+'Nový projekt</button></div>'+
+      '<div class="card" style="margin-top:16px">'+draft.projects.map(function(p,i){
+        return '<a class="prow" href="#/projekt/'+p.id+'"><img src="'+(p.photos[0]?th(p.photos[0]):'')+'" alt=""><span class="tt"><b>'+esc(p.title)+'</b><span>'+esc(p.client)+(p.year?' · '+p.year:'')+'</span></span><span class="chip">'+CAT[p.cat]+'</span><span class="cnt">'+p.photos.length+' fotek</span><span style="display:flex;flex-direction:column">'+
+          '<button type="button" class="ib" data-mv="'+i+'" data-d="-1" '+(i?'':'disabled')+' aria-label="Posunout výš" style="height:18px">'+IC.up+'</button><button type="button" class="ib" data-mv="'+i+'" data-d="1" '+(i<draft.projects.length-1?'':'disabled')+' aria-label="Posunout níž" style="height:18px">'+IC.down+'</button></span></a>';
+      }).join('')+'</div></div>';
+    $('pNew').onclick=newProject;
+    $$('[data-mv]').forEach(function(b){b.onclick=function(e){e.preventDefault();e.stopPropagation();var i=+b.dataset.mv,j=i+(+b.dataset.d),a=draft.projects,t=a[i];a[i]=a[j];a[j]=t;note('order','Pořadí projektů');save();pgProjects();};});
+  }
+  function newProject(){
+    var id='p'+Date.now().toString(36);
+    draft.projects.unshift({id:id,title:'Nový projekt',client:'',cat:'sport',year:new Date().getFullYear(),place:'',desc:'',photos:[]});
+    note('new:'+id,'Nový projekt');save();location.hash='#/projekt/'+id;
+  }
+  function dropFromOverview(ids){
+    draft.layouts.overview.forEach(function(r){r.items=r.items.filter(function(it){return ids.indexOf(it.id)<0;});});
+    draft.layouts.overview=draft.layouts.overview.filter(function(r){return r.items.length;});
+  }
+  function pgProject(id){
+    var p=proj(id);if(!p){location.hash='#/projekty';return;}
+    var setTitle=function(){$('title').innerHTML='<a href="#/projekty">Projekty</a> / '+esc(p.title||'Bez názvu');};setTitle();
+    var opt=D.cats.map(function(c){return '<option value="'+c[0]+'"'+(c[0]===p.cat?' selected':'')+'>'+c[1]+'</option>';}).join('');
+    $('content').innerHTML='<div class="page">'+
+      '<div class="form2"><label class="field"><span>Název projektu</span><input class="inp" id="f-title" data-f="title" value="'+esc(p.title)+'"></label>'+
+      '<label class="field"><span>Kategorie (stránka na webu)</span><select class="inp" id="f-cat" data-f="cat">'+opt+'</select></label>'+
+      '<label class="field"><span>Klient</span><input class="inp" id="f-client" data-f="client" value="'+esc(p.client)+'" placeholder="např. Puma Running"></label>'+
+      '<label class="field"><span>Rok</span><input class="inp" id="f-year" data-f="year" value="'+esc(p.year)+'" inputmode="numeric"></label>'+
+      '<label class="field full"><span>Krátký popis (zobrazí se u fotky, anglicky)</span><textarea class="inp" id="f-desc" rows="2" data-f="desc">'+esc(p.desc)+'</textarea></label></div>'+
+      '<h3>Fotky <span class="dim" style="text-transform:none;letter-spacing:0;font-weight:500">· '+p.photos.length+' · přetažením změníš pořadí</span></h3>'+
+      '<div class="thumbs" id="thumbs">'+p.photos.map(function(ph,i){return '<div class="th" draggable="true" data-i="'+i+'"><img src="'+th(ph)+'" alt=""><span class="no">'+(i+1)+'</span><button type="button" class="x" data-del="'+i+'" aria-label="Odebrat fotku">'+IC.x+'</button></div>';}).join('')+
+      '<button type="button" class="th add" id="addPh">'+IC.plus+'<span>Nahrát fotky</span></button></div>'+
+      '<div style="display:flex;justify-content:space-between;gap:10px;margin-top:28px;flex-wrap:wrap"><a class="btn" href="#/rozvrzeni/'+p.cat+'">'+IC.grid+'Rozvržení stránky '+CAT[p.cat]+'</a><button class="btn danger" type="button" id="pDel">'+IC.trash+'Smazat projekt</button></div></div>';
+    $$('[data-f]').forEach(function(inp){inp.addEventListener('input',function(){
+      var f=inp.dataset.f,old=p.cat;p[f]=f==='year'?inp.value.replace(/\D/g,''):inp.value;
+      if(f==='title')setTitle();
+      if(f==='cat'&&old!==p.cat){LH.syncLayout(draft,old);LH.syncLayout(draft,p.cat);note('cat:'+p.id,'Projekt „'+p.title+'“ přesunut do '+CAT[p.cat]);}
+      else note('p:'+p.id,'Úprava projektu „'+p.title+'“');
+      save();
+    });});
+    $('addPh').onclick=function(){openUpload(p);};
+    $('pDel').onclick=function(){confirmBox('Smazat projekt „'+p.title+'“?','Fotky zmizí i ze stránky '+CAT[p.cat]+'. Dokud nezveřejníš, jde to vrátit v Historii.',function(){
+      draft.projects=draft.projects.filter(function(x){return x!==p;});LH.syncLayout(draft,p.cat);dropFromOverview(p.photos);
+      note('del:'+p.id,'Smazán projekt „'+p.title+'“');save();location.hash='#/projekty';});};
+    $$('[data-del]').forEach(function(b){b.onclick=function(e){e.stopPropagation();var ph=p.photos.splice(+b.dataset.del,1)[0];
+      LH.syncLayout(draft,p.cat);dropFromOverview([ph]);note('p:'+p.id,'Úprava projektu „'+p.title+'“');save();pgProject(p.id);};});
+    var from=null;
+    $$('#thumbs .th[data-i]').forEach(function(t){
+      t.addEventListener('dragstart',function(e){from=+t.dataset.i;t.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+      t.addEventListener('dragend',function(){t.classList.remove('dragging');$$('#thumbs .over').forEach(function(x){x.classList.remove('over');});});
+      t.addEventListener('dragover',function(e){e.preventDefault();t.classList.add('over');});
+      t.addEventListener('dragleave',function(){t.classList.remove('over');});
+      t.addEventListener('drop',function(e){e.preventDefault();var to=+t.dataset.i;if(from===null||from===to)return;var x=p.photos.splice(from,1)[0];p.photos.splice(to,0,x);note('p:'+p.id,'Pořadí fotek v projektu „'+p.title+'“');save();pgProject(p.id);});
+    });
+  }
+
+  /* ---------- upload: real WebP conversion in the browser, stored on the server ---------- */
+  function openUpload(p){
+    var R=D.reserve,used={};draft.projects.forEach(function(x){x.photos.forEach(function(id){used[id]=1;});});
+    var avail=R.photos.filter(function(id){return !used[id];});
+    var m=modal('<h3>Nahrát fotky do „'+esc(p.title)+'“</h3>'+
+      '<div class="drop" id="drop">'+IC.img+'<span>Přetáhni sem fotky z počítače, nebo</span><button class="btn" type="button" id="pickOwn">Vybrat z počítače</button><span class="hint">JPG i PNG v plném rozlišení. Samy se zmenší a převedou do WebP.</span></div>'+
+      (avail.length?'<div><p style="font-weight:600;margin-bottom:8px">Nebo ukázkové fotky: '+esc(R.title)+'</p><div class="pick">'+avail.map(function(id){return '<label><input type="checkbox" value="'+id+'" checked><img src="'+IMG+id+'.webp" alt=""></label>';}).join('')+'</div></div>':'')+
+      '<div class="up" id="upList"></div>'+
+      '<div class="acts"><button class="btn" type="button" data-close>Zavřít</button>'+(avail.length?'<button class="btn pri" type="button" id="useSample">Přidat ukázkové</button>':'')+'</div>');
+    var drop=$('drop');
+    $('pickOwn').onclick=function(){var f=$('file');f.value='';f.onchange=function(){runUploads(p,[].slice.call(f.files).map(fileItem),m);};f.click();};
+    drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('over');});
+    drop.addEventListener('dragleave',function(){drop.classList.remove('over');});
+    drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('over');var fs=[].slice.call(e.dataTransfer.files).filter(function(f){return /^image\//.test(f.type);});if(fs.length)runUploads(p,fs.map(fileItem),m);});
+    var us=$('useSample');if(us)us.onclick=function(){
+      var ids=$$('.pick input:checked',m).map(function(i){return i.value;});if(!ids.length)return;
+      if(p.title==='Nový projekt'){p.title=R.title;p.client=R.client;p.year=R.year;p.desc=R.desc;p.cat=R.cat;}
+      runUploads(p,ids.map(function(id,k){return {name:'IMG_'+(4821+k*7)+'.JPG',orig:'ukázka',sample:id};}),m);
+    };
+  }
+  function fileItem(f){return {name:f.name,orig:(f.size/1048576).toFixed(1).replace('.',',')+' MB',file:f};}
+  function fmtKB(b){return b>1048576?(b/1048576).toFixed(1).replace('.',',')+' MB':Math.round(b/1024)+' kB';}
+  function runUploads(p,items,m){
+    var list=$('upList');list.innerHTML='';
+    var acts=m.querySelector('.acts');acts.innerHTML='<span class="hint" style="margin-right:auto">Nahrávám…</span>';
+    var done=0;
+    var next=function(k){
+      if(k>=items.length)return;
+      var it=items[k],row=document.createElement('div');row.className='upr';
+      row.innerHTML='<img alt=""><div><b>'+esc(it.name)+'</b><small>'+it.orig+' → převádím do WebP…</small><div class="bar"><i></i></div></div><span class="dim">'+IC.img+'</span>';
+      list.appendChild(row);setTimeout(function(){row.querySelector('i').style.width='45%';},40);
+      var ok=function(id,w,h,bytes,src){
+        row.querySelector('img').src=src;row.querySelector('i').style.width='100%';
+        row.querySelector('small').innerHTML=it.orig+' → <b style="color:var(--ok)">WebP '+fmtKB(bytes)+'</b> · '+w+' × '+h+' px';
+        row.lastChild.innerHTML='<span style="color:var(--ok)">'+IC.check+'</span>';
+        p.photos.push(id);fin();
+      };
+      var bad=function(msg){row.querySelector('small').textContent=msg;row.querySelector('i').style.background='#b42318';fin();};
+      if(it.sample){
+        var d=D.photos[it.sample];
+        fetch(IMG+it.sample+'.webp').then(function(r){return r.blob();}).then(function(b){setTimeout(function(){ok(it.sample,d[0],d[1],b.size,IMG+it.sample+'.webp');},350);},function(){ok(it.sample,d[0],d[1],0,IMG+it.sample+'.webp');});
+      }else{
+        convert(it.file).then(function(r){
+          row.querySelector('small').textContent=it.orig+' → WebP '+fmtKB(r.blob.size)+', nahrávám…';row.querySelector('i').style.width='75%';
+          if(OFFLINE){var fr=new FileReader();fr.onload=function(){var id='l'+Date.now().toString(36)+k;draft.extra[id]={src:fr.result,w:r.w,h:r.h};ok(id,r.w,r.h,r.blob.size,fr.result);};fr.readAsDataURL(r.blob);return;}
+          return api('/api/upload?w='+r.w+'&h='+r.h,{method:'POST',raw:true,type:r.blob.type,body:r.blob}).then(function(u){draft.extra[u.id]={src:u.src,w:r.w,h:r.h};ok(u.id,r.w,r.h,u.bytes,u.src);});
+        }).catch(function(e){bad('Nepodařilo se: '+(e&&e.message||'soubor nejde načíst'));});
+      }
+      setTimeout(function(){next(k+1);},120);
+    };
+    var fin=function(){
+      if(++done<items.length)return;
+      LH.syncLayout(draft,p.cat);doGuide('project');
+      note('up:'+p.id,'Projekt „'+p.title+'“: '+p.photos.length+' fotek');save();
+      acts.innerHTML='<a class="btn" href="#/rozvrzeni/'+p.cat+'">'+IC.grid+'Upravit rozvržení</a><button class="btn pri" type="button" data-close>Hotovo</button>';
+      m._onclose=function(){if(/#\/projekt\//.test(location.hash))pgProject(p.id);};
+      toast('Fotky jsou na konci stránky '+CAT[p.cat]+'. <a href="#/rozvrzeni/'+p.cat+'">Upravit rozvržení</a>',5000);
+    };
+    next(0);
+  }
+  /* decode, scale to max 2000 px, encode as WebP (JPEG fallback for browsers without WebP encoding) */
+  function convert(file){
+    return new Promise(function(res,rej){
+      var img=new Image(),u=URL.createObjectURL(file);
+      img.onload=function(){
+        var s=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*s),h=Math.round(img.naturalHeight*s);
+        var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(u);
+        c.toBlob(function(b){
+          if(b&&b.type==='image/webp')return res({blob:b,w:w,h:h});
+          c.toBlob(function(j){j?res({blob:j,w:w,h:h}):rej(new Error('převod selhal'));},'image/jpeg',.82);
+        },'image/webp',.8);
+      };
+      img.onerror=function(){URL.revokeObjectURL(u);rej(new Error('soubor není obrázek'));};img.src=u;
+    });
+  }
+
+  /* ---------- layout editor: shared ---------- */
+  var page='overview',undo=[],redo=[],sel=null,frames=[];
+  function rows(){return draft.layouts[page];}
+  function snap(){undo.push(JSON.stringify(rows()));if(undo.length>80)undo.shift();redo=[];}
+  function changed(){note('layout:'+page,'Rozvržení stránky '+CAT[page]);doGuide('layout');guide.lastCat=page;LS.set('lh-guide',guide);save();}
+  function doUndo(){if(!undo.length)return;redo.push(JSON.stringify(rows()));draft.layouts[page]=JSON.parse(undo.pop());sel=null;changed();renderLayout();}
+  function doRedo(){if(!redo.length)return;undo.push(JSON.stringify(rows()));draft.layouts[page]=JSON.parse(redo.pop());sel=null;changed();renderLayout();}
+  function tabsHtml(){return '<div class="tabs">'+['overview'].concat(D.cats.map(function(c){return c[0];})).map(function(k){return '<a href="#/rozvrzeni/'+k+'" class="'+(k===page?'on':'')+'">'+CAT[k]+'</a>';}).join('')+'</div>';}
+  function modeSeg(){return '<span class="seg" id="modeSeg" title="Varianta administrace"><button type="button" data-mode="canvas" aria-pressed="'+(MODE==='canvas')+'">'+IC.canvas+'Plátno</button><button type="button" data-mode="basic" aria-pressed="'+(MODE==='basic')+'">'+IC.sliders+'Základní</button></span>';}
+  function bindMode(){$$('#modeSeg [data-mode]').forEach(function(b){b.onclick=function(){MODE=b.dataset.mode;LS.set('lh-mode',MODE);pgLayout(page);};});}
+  function pushPreview(){frames.forEach(function(f){if(f._ready)f.contentWindow.postMessage({type:'lh-site',site:draft,route:f._route},'*');});setTimeout(measureFrames,120);setTimeout(measureFrames,700);}
+  addEventListener('message',function(e){if(!e.data||e.data.type!=='lh-ready')return;frames.forEach(function(f){if(e.source===f.contentWindow){f._ready=true;f.contentWindow.postMessage({type:'lh-site',site:draft,route:f._route},'*');}});setTimeout(measureFrames,150);setTimeout(measureFrames,900);});
+  function mkFrame(route,w,h,auto){
+    var f=document.createElement('iframe');f.src='/?preview=1#/'+route;f._route=route;f._auto=!!auto;f.title='Náhled webu';f.setAttribute('tabindex','-1');
+    f.style.width=w+'px';f.style.height=h+'px';f.addEventListener('load',function(){setTimeout(measureFrames,300);});
+    frames.push(f);return f;
+  }
+  /* breakpoint frames on the canvas grow to the full page height, like Framer */
+  function measureFrames(){
+    var changedH=false;
+    frames.forEach(function(f){if(!f._auto)return;try{var d=f.contentDocument;if(!d||!d.body)return;var h=Math.max(d.documentElement.scrollHeight,d.body.scrollHeight);if(h&&Math.abs(h-parseFloat(f.style.height))>2){f.style.height=h+'px';changedH=true;}}catch(e){}});
+    if(changedH&&MODE==='canvas')fitStage();
+  }
+  function pgLayout(pg){
+    page=CAT[pg]?pg:'overview';undo=[];redo=[];sel=null;frames=[];
+    if(page!=='overview')LH.syncLayout(draft,page);
+    $('title').textContent='Rozvržení stránek';
+    if(MODE==='basic')layoutBasic();else layoutCanvas();
+  }
+  function renderLayout(){if(MODE==='basic')renderBasic();else renderBoard();pushPreview();}
+  function moveItem(from,to){
+    var rs=rows(),it=rs[from.ri].items.splice(from.ii,1)[0];
+    if(to.type==='in'){var idx=to.idx;if(to.ri===from.ri&&idx>from.ii)idx--;rs[to.ri].items.splice(idx,0,it);}
+    else rs.splice(to.ri,0,{a:'c',items:[it]});
+    draft.layouts[page]=rs.filter(function(r){return r.items.length;});
+    selectItem(it);
+  }
+  function selectItem(it){sel=null;draft.layouts[page].forEach(function(r,ri){r.items.forEach(function(x,ii){if(x===it)sel={ri:ri,ii:ii};});});}
+  function splitAt(ri,ii){var rs=rows(),r=rs[ri];if(ii===0)return;var rest=r.items.splice(ii);rs.splice(ri+1,0,{a:r.a||'c',v:r.v,g:r.g,items:rest});sel={ri:ri+1,ii:0};}
+  function mergeUp(ri){var rs=rows();if(ri<1)return;var prevLen=rs[ri-1].items.length;rs[ri-1].items=rs[ri-1].items.concat(rs[ri].items);rs.splice(ri,1);if(sel)sel={ri:ri-1,ii:prevLen+(sel.ii||0)};}
+  function setWidth(it,w,free){
+    w=Math.max(LH.MINW,Math.min(LH.MAXW,w));
+    var st=LH.stepOf(w);
+    if(!free&&Math.abs(LH.SZ[st]-w)<=1.6){it.s=st;delete it.w;}
+    else{it.w=Math.round(w);it.s=LH.stepOf(it.w);}
+  }
+  function wLabel(it){var w=LH.width(it);return Math.round(w)+' %'+(it.w==null?' · '+it.s:'');}
+  function stepItem(d){
+    if(!sel)return;var rs=rows(),r=rs[sel.ri],it=r.items[sel.ii];snap();
+    if(d<0){
+      if(sel.ii>0){r.items.splice(sel.ii,1);r.items.splice(sel.ii-1,0,it);}
+      else if(sel.ri>0){r.items.splice(0,1);rs[sel.ri-1].items.push(it);}
+    }else{
+      if(sel.ii<r.items.length-1){r.items.splice(sel.ii,1);r.items.splice(sel.ii+1,0,it);}
+      else if(sel.ri<rs.length-1){r.items.splice(sel.ii,1);rs[sel.ri+1].items.unshift(it);}
+    }
+    draft.layouts[page]=rs.filter(function(x){return x.items.length;});selectItem(it);changed();renderLayout();
+  }
+  function addToOverview(){
+    var on={};rows().forEach(function(r){r.items.forEach(function(it){on[it.id]=1;});});
+    var all=[];draft.projects.forEach(function(p){p.photos.forEach(function(id){if(!on[id])all.push(id);});});
+    var m=modal('<h3>Přidat fotky na Overview</h3><p class="muted">Vybrané fotky se přidají na konec stránky.</p><div class="pick">'+all.map(function(id){return '<label><input type="checkbox" value="'+id+'"><img src="'+th(id)+'" alt=""></label>';}).join('')+'</div><div class="acts"><button class="btn" type="button" data-close>Zrušit</button><button class="btn pri" type="button" id="ovAdd">Přidat</button></div>');
+    $('ovAdd').onclick=function(){var ids=$$('.pick input:checked',m).map(function(i){return i.value;});if(!ids.length)return;snap();draft.layouts.overview=rows().concat(LH.packRows(draft,ids,'ov'));changed();closeModal(m);renderLayout();};
+  }
+  function removeSel(){if(page!=='overview'||!sel)return;snap();rows()[sel.ri].items.splice(sel.ii,1);draft.layouts.overview=rows().filter(function(x){return x.items.length;});sel=null;changed();renderLayout();}
+
+  /* ---------- inspector (both modes) ---------- */
+  function inspectorHtml(){
+    if(!sel)return '<h4>Úpravy</h4><ul class="tips"><li>'+IC.grid+'<span>Fotku <b>chyť a přetáhni</b> jinam v řádku, do jiného řádku nebo mezi řádky, kde vznikne nový.</span></li><li>'+IC.canvas+'<span>Velikost změníš <b>tažením za modré úchyty</b>. U pěti základních velikostí se přichytí, s <kbd>Shift</kbd> bez přichytávání.</span></li><li>'+IC.ac+'<span>Zarovnání řádku je vlevo od něj, víc možností tady po kliknutí na fotku.</span></li><li>'+IC.left+'<span>Vybranou fotku posouvají šipky <kbd>←</kbd> <kbd>→</kbd>, krok zpět <kbd>⌘</kbd> <kbd>Z</kbd>.</span></li></ul>';
+    var r=rows()[sel.ri],it=r.items[sel.ii],p=photoProj(it.id),w=LH.width(it),rw=LH.rowWidth(r);
+    return '<h4>Vybraná fotka <button type="button" class="ib" id="desel" aria-label="Zrušit výběr">'+IC.x+'</button></h4><div class="insp">'+
+      '<div class="who"><img src="'+th(it.id)+'" alt=""><div><b>'+esc(p?p.title:'Fotka')+'</b><span class="dim">'+esc(p?p.client:'')+'</span></div></div>'+
+      '<div class="ctl"><span>Šířka <span class="num"><input id="wNum" type="number" min="'+LH.MINW+'" max="'+LH.MAXW+'" value="'+Math.round(w)+'" aria-label="Šířka v procentech"><span>%</span></span></span>'+
+        '<input type="range" id="wRange" min="'+LH.MINW+'" max="70" step="1" value="'+Math.round(w)+'" aria-label="Šířka">'+
+        '<div class="ticks">'+LH.SIZES.map(function(s){return '<button type="button" data-step="'+s+'" class="'+(it.w==null&&it.s===s?'on':'')+'" style="left:'+((LH.SZ[s]-LH.MINW)/(70-LH.MINW)*100)+'%">'+s+'</button>';}).join('')+'</div></div>'+
+      '<div class="ctl"><span>Poloha</span><div class="acts"><button class="btn sm" type="button" id="iPrev">'+IC.left+'Dopředu</button><button class="btn sm" type="button" id="iNext">Dozadu'+IC.right+'</button></div></div>'+
+      '<div class="ctl"><span>Řádek '+(sel.ri+1)+' <span class="dim" style="font-weight:400">'+Math.round(rw)+' % šířky'+(rw>100?' · <b style="color:var(--warn)">fotky se zmenší, aby se vešly</b>':'')+'</span></span>'+
+        '<div class="acts"><span class="seg" id="alSeg">'+['l','c','r','j'].map(function(k){return '<button type="button" data-al="'+k+'" aria-pressed="'+((r.a||'c')===k)+'" title="'+AL[k]+'" aria-label="'+AL[k]+'">'+ALI[k]+'</button>';}).join('')+'</span>'+
+        '<span class="seg" id="vaSeg">'+['t','c','b'].map(function(k){return '<button type="button" data-va="'+k+'" aria-pressed="'+((r.v||'b')===k)+'" title="Svisle: '+VA[k]+'" aria-label="Svisle: '+VA[k]+'">'+VAI[k]+'</button>';}).join('')+'</span></div>'+
+        '<div class="acts" style="align-items:center"><span class="hint" style="margin-right:4px">Mezera pod řádkem</span><span class="seg" id="gpSeg">'+['s','m','l'].map(function(k){return '<button type="button" data-gp="'+k+'" aria-pressed="'+((r.g||'m')===k)+'">'+GP[k]+'</button>';}).join('')+'</span></div></div>'+
+      '<div class="acts"><button class="btn sm" type="button" id="iSplit" '+(sel.ii?'':'disabled')+'>'+IC.split+'Začít tady nový řádek</button><button class="btn sm" type="button" id="iMerge" '+(sel.ri?'':'disabled')+'>'+IC.merge+'Spojit s řádkem nad</button>'+
+      (page==='overview'?'<button class="btn sm danger" type="button" id="iDel">'+IC.trash+'Odebrat z Overview</button>':'')+'</div></div>';
+  }
+  function bindInspector(rerender){
+    if(!sel){return;}
+    var r=rows()[sel.ri],it=r.items[sel.ii];
+    $('desel').onclick=function(){sel=null;rerender();};
+    var wr=$('wRange'),startSnap=false;
+    wr.addEventListener('pointerdown',function(){if(!startSnap){snap();startSnap=true;}});
+    wr.addEventListener('input',function(){setWidth(it,+wr.value,false);$('wNum').value=Math.round(LH.width(it));liveUpdate();});
+    wr.addEventListener('change',function(){startSnap=false;changed();rerender();});
+    $('wNum').addEventListener('change',function(){snap();setWidth(it,+this.value,true);changed();rerender();});
+    $$('[data-step]').forEach(function(b){b.onclick=function(){snap();it.s=b.dataset.step;delete it.w;changed();rerender();};});
+    $('iPrev').onclick=function(){stepItem(-1);};$('iNext').onclick=function(){stepItem(1);};
+    $$('#alSeg button').forEach(function(b){b.onclick=function(){snap();r.a=b.dataset.al;changed();rerender();};});
+    $$('#vaSeg button').forEach(function(b){b.onclick=function(){snap();r.v=b.dataset.va;changed();rerender();};});
+    $$('#gpSeg button').forEach(function(b){b.onclick=function(){snap();r.g=b.dataset.gp;changed();rerender();};});
+    $('iSplit').onclick=function(){snap();splitAt(sel.ri,sel.ii);changed();rerender();};
+    $('iMerge').onclick=function(){snap();mergeUp(sel.ri);changed();rerender();};
+    if($('iDel'))$('iDel').onclick=removeSel;
+    function liveUpdate(){
+      var el=document.querySelector('#board .lh-ph.sel');if(el){el.style.setProperty('--w',LH.width(it));var l=el.querySelector('.szl');if(l)l.textContent=wLabel(it);}
+      $$('[data-step]').forEach(function(b){b.classList.toggle('on',it.w==null&&it.s===b.dataset.step);});
+      pushPreview();
+    }
+  }
+
+  /* ---------- canvas mode ---------- */
+  var zoom=null,showTab=true,showMob=true,drag=null,rz=null,pan=null;
+  function layoutCanvas(){
+    $('content').innerHTML='<div class="lay"><div class="lay-l"><div class="lay-bar">'+tabsHtml()+
+      '<div class="grp">'+modeSeg()+'<span class="togs"><button class="tog" type="button" id="tgTab" aria-pressed="'+showTab+'">'+IC.tablet+'Tablet</button><button class="tog" type="button" id="tgMob" aria-pressed="'+showMob+'">'+IC.phone+'Mobil</button></span>'+
+      (page==='overview'?'<button class="btn sm" type="button" id="addOv">'+IC.plus+'Přidat fotku</button>':'')+
+      '<button class="btn sm ghost" type="button" id="un" aria-label="Zpět" title="Zpět (⌘Z)">'+IC.undo+'</button><button class="btn sm ghost" type="button" id="re" aria-label="Znovu" title="Znovu (⇧⌘Z)">'+IC.redo+'</button>'+
+      '<span class="zoom"><button type="button" id="zOut" aria-label="Oddálit">−</button><span id="zVal"></span><button type="button" id="zIn" aria-label="Přiblížit">+</button><button type="button" id="zFit">Vejít</button></span></div></div>'+
+      '<div class="cv" id="cv"><div class="stage" id="stage"><div class="frames" id="frames"></div></div></div></div>'+
+      '<div class="lay-r"><div class="pane" id="insp"></div><div class="pane"><h4>Jak to funguje</h4><p class="hint">Vlevo upravuješ verzi pro počítač. Tablet a mobil vedle se skládají samy podle ní a ukazují přesně to, co uvidí návštěvník. Plátno posuneš kolečkem nebo tažením s mezerníkem, přiblížíš s <kbd>⌘</kbd> a kolečkem.</p></div></div></div>';
+    $('un').onclick=doUndo;$('re').onclick=doRedo;
+    if($('addOv'))$('addOv').onclick=addToOverview;
+    bindMode();
+    $('tgTab').onclick=function(){showTab=!showTab;this.setAttribute('aria-pressed',showTab);mountFrames();zoom=null;fitStage();};
+    $('tgMob').onclick=function(){showMob=!showMob;this.setAttribute('aria-pressed',showMob);mountFrames();zoom=null;fitStage();};
+    $('zIn').onclick=function(){setZoom((zoom||.5)*1.2);};$('zOut').onclick=function(){setZoom((zoom||.5)/1.2);};$('zFit').onclick=function(){zoom=null;fitStage();};
+    mountFrames();renderBoard();zoom=null;fitStage();
+    var cv=$('cv');
+    cv.addEventListener('pointerdown',boardDown);
+    cv.addEventListener('wheel',function(e){if(e.ctrlKey||e.metaKey){e.preventDefault();var r=cv.getBoundingClientRect();zoomAt((zoom||.5)*Math.pow(1.0018,-e.deltaY),e.clientX-r.left,e.clientY-r.top);}},{passive:false});
+  }
+  function mountFrames(){
+    var fr=$('frames');if(!fr)return;
+    var keepBoard=$('board');
+    fr.innerHTML='<div class="fr desk"><div class="fr-l"><b>Počítač</b> 1280 px <span class="tag">upravuješ</span></div><div class="board" id="board"></div></div>';
+    if(keepBoard)fr.firstChild.replaceChild(keepBoard,fr.firstChild.querySelector('#board'));
+    frames=[];
+    var route=page==='overview'?'':page;
+    if(showTab){var t=document.createElement('div');t.className='fr tab';t.innerHTML='<div class="fr-l"><b>Tablet</b> 820 px</div>';t.appendChild(mkFrame(route,820,1180,true));fr.appendChild(t);}
+    if(showMob){var mb=document.createElement('div');mb.className='fr mob';mb.innerHTML='<div class="fr-l"><b>Mobil</b> 390 px</div>';mb.appendChild(mkFrame(route,390,844,true));fr.appendChild(mb);}
+  }
+  function stageSize(){var fr=$('frames');return {w:fr.scrollWidth,h:fr.scrollHeight};}
+  function fitStage(){
+    var cv=$('cv');if(!cv)return;
+    if(zoom==null){var s=stageSize();var z=(cv.clientWidth-8)/s.w;if(z<.3){var deskW=1280+180;z=Math.min(.6,(cv.clientWidth-8)/deskW);}zoom=Math.max(.15,Math.min(1,z));}
+    applyZoom();
+  }
+  function applyZoom(){
+    var fr=$('frames'),st=$('stage');if(!fr)return;
+    fr.style.transform='scale('+zoom+')';
+    var s=stageSize();st.style.width=(s.w*zoom)+'px';st.style.height=(s.h*zoom)+'px';
+    $('zVal').textContent=Math.round(zoom*100)+' %';
+  }
+  function setZoom(z){var cv=$('cv');zoomAt(z,cv.clientWidth/2,cv.clientHeight/2);}
+  function zoomAt(z,cx,cy){
+    var cv=$('cv');z=Math.max(.15,Math.min(1.5,z));var old=zoom||.5;
+    var x=(cv.scrollLeft+cx)/old,y=(cv.scrollTop+cy)/old;zoom=z;applyZoom();
+    cv.scrollLeft=x*z-cx;cv.scrollTop=y*z-cy;
+  }
+  addEventListener('resize',function(){if(MODE==='canvas'&&$('cv')){zoom=null;fitStage();}});
+  function renderBoard(keepInspector){
+    var b=$('board');if(!b)return;
+    var cats=['overview'].concat(D.cats.map(function(c){return c[0];}));
+    b.innerHTML='<div class="bm"><p>Photographer based in the heart of Europe, working with brands in <u>Portrait</u>, <u>Fashion</u>, <u>Sport</u> and <u>Automotive</u>. <u>Work with me.</u></p><h1>Lukáš Hála</h1><em>Production Imaginis</em><nav>'+cats.map(function(k){return '<u class="'+(k===page?'on':'')+'">'+CAT[k]+'</u>';}).join(', ')+'</nav></div>'+
+      LH.rowsHtml(draft,rows(),{base:IMG,lazy:false});
+    $$('.lh-row',b).forEach(function(r,ri){
+      var a=rows()[ri].a||'c',t=document.createElement('div');t.className='rtool';
+      t.innerHTML='<span class="seg">'+['l','c','r','j'].map(function(k){return '<button type="button" data-ra="'+k+'" data-ri="'+ri+'" aria-pressed="'+(a===k)+'" title="'+AL[k]+'">'+ALI[k]+'</button>';}).join('')+'</span>';
+      r.appendChild(t);if(sel&&sel.ri===ri)r.classList.add('rsel');
+    });
+    if(sel){var el=b.querySelector('.lh-ph[data-ri="'+sel.ri+'"][data-ii="'+sel.ii+'"]');if(el)decorate(el);else sel=null;}
+    if(!keepInspector){$('insp').innerHTML=inspectorHtml();bindInspector(function(k){renderBoard(k);if(!k)pushPreview();});}
+    requestAnimationFrame(applyZoom);
+  }
+  function decorate(el){
+    el.classList.add('sel');
+    var it=rows()[sel.ri].items[sel.ii];
+    el.insertAdjacentHTML('beforeend',['tl','tr','bl','br','ml','mr'].map(function(k){return '<span class="hdl '+k+'" data-h="'+k+'"></span>';}).join('')+'<span class="szl">'+wLabel(it)+'</span>');
+  }
+  function boardDown(e){
+    if(e.button===1||spaceDown){e.preventDefault();var cv=$('cv');pan={x:e.clientX,y:e.clientY,l:cv.scrollLeft,t:cv.scrollTop};cv.classList.add('panning');return;}
+    if(e.button!==0)return;
+    var ra=e.target.closest('[data-ra]');
+    if(ra){snap();rows()[+ra.dataset.ri].a=ra.dataset.ra;changed();renderBoard();pushPreview();return;}
+    var h=e.target.closest('.hdl');
+    if(h){e.preventDefault();var ph=h.parentNode,it=rows()[sel.ri].items[sel.ii];rz={el:ph,side:/l$/.test(h.dataset.h)?'l':'r',x0:e.clientX,w0:ph.getBoundingClientRect().width/zoom,it:it,before:JSON.stringify(rows())};return;}
+    var ph2=e.target.closest('#board .lh-ph');
+    if(!ph2){if(!e.target.closest('.rtool')){var hadSel=!!sel;sel=null;if(hadSel)renderBoard();}
+      if(!e.target.closest('#board')){var cv2=$('cv');pan={x:e.clientX,y:e.clientY,l:cv2.scrollLeft,t:cv2.scrollTop};cv2.classList.add('panning');}
+      return;}
+    e.preventDefault();
+    drag={el:ph2,ri:+ph2.dataset.ri,ii:+ph2.dataset.ii,x0:e.clientX,y0:e.clientY,on:false};
+  }
+  var spaceDown=false;
+  addEventListener('keydown',function(e){if(e.code==='Space'&&MODE==='canvas'&&$('cv')&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){spaceDown=true;e.preventDefault();}});
+  addEventListener('keyup',function(e){if(e.code==='Space')spaceDown=false;});
+  addEventListener('pointermove',function(e){
+    if(pan){var cv=$('cv');cv.scrollLeft=pan.l-(e.clientX-pan.x);cv.scrollTop=pan.t-(e.clientY-pan.y);return;}
+    if(rz){
+      var dx=(e.clientX-rz.x0)/zoom*(rz.side==='l'?-1:1),row=rows()[sel.ri],centered=(row.a||'c')==='c';
+      var w=rz.w0+dx*(centered?2:1);setWidth(rz.it,w/1024*100,e.shiftKey);
+      rz.el.style.setProperty('--w',LH.width(rz.it));rz.el.querySelector('.szl').textContent=wLabel(rz.it);
+      return;
+    }
+    if(!drag)return;
+    if(!drag.on){if(Math.abs(e.clientX-drag.x0)+Math.abs(e.clientY-drag.y0)<6)return;startDrag();}
+    var g=drag.ghost;g.style.left=(e.clientX+16)+'px';g.style.top=(e.clientY+16)+'px';
+    autoscroll(e.clientX,e.clientY);
+    drag.to=target(e.clientX,e.clientY);showInd(drag.to);
+  });
+  addEventListener('pointerup',function(){
+    if(pan){pan=null;var cv=$('cv');if(cv)cv.classList.remove('panning');return;}
+    if(rz){var r=rz;rz=null;var after=JSON.stringify(rows());if(after!==r.before){undo.push(r.before);redo=[];changed();}renderBoard();pushPreview();return;}
+    if(!drag)return;var d=drag;drag=null;stopAuto();
+    if(!d.on){sel={ri:d.ri,ii:d.ii};renderBoard();return;}
+    d.ghost.remove();var ind=$('board').querySelector('.ind');if(ind)ind.remove();
+    if(d.to){snap();moveItem({ri:d.ri,ii:d.ii},d.to);changed();}
+    renderBoard();pushPreview();
+  });
+  function startDrag(){
+    drag.on=true;sel=null;
+    var r=drag.el.getBoundingClientRect();drag.gw=Math.max(60,Math.min(r.width,150));drag.gh=drag.gw*r.height/r.width;
+    var g=document.createElement('div');g.className='ghost';g.style.width=drag.gw+'px';g.style.height=drag.gh+'px';g.innerHTML='<img src="'+drag.el.querySelector('img').src+'" alt="">';
+    document.body.appendChild(g);drag.ghost=g;
+    $$('#board .lh-ph.sel').forEach(function(x){x.classList.remove('sel');});$$('#board .hdl,#board .szl').forEach(function(x){x.remove();});
+    drag.el.classList.add('dragging');
+  }
+  function target(x,y){
+    var rs=$$('#board .lh-row');if(!rs.length)return {type:'new',ri:0};
+    for(var i=0;i<rs.length;i++){
+      var r=rs[i].getBoundingClientRect(),pad=16*zoom;
+      if(y>=r.top-pad&&y<=r.bottom+pad){
+        var its=$$('.lh-ph',rs[i]),idx=0;
+        its.forEach(function(el,k){var b=el.getBoundingClientRect();if(x>b.left+b.width/2)idx=k+1;});
+        return {type:'in',ri:i,idx:idx};
+      }
+      if(y<r.top)return {type:'new',ri:i};
+    }
+    return {type:'new',ri:rs.length};
+  }
+  function showInd(t){
+    var b=$('board'),br=b.getBoundingClientRect(),ind=b.querySelector('.ind');
+    if(!ind){ind=document.createElement('div');b.appendChild(ind);}
+    var rs=$$('#board .lh-row');
+    if(t.type==='in'){
+      var row=rs[t.ri],its=$$('.lh-ph',row),rr=row.getBoundingClientRect(),xx;
+      if(t.idx<its.length)xx=its[t.idx].getBoundingClientRect().left-14*zoom;else xx=its[its.length-1].getBoundingClientRect().right+14*zoom;
+      ind.className='ind';ind.style.cssText='left:'+((xx-br.left)/zoom-4)+'px;top:'+((rr.top-br.top)/zoom-12)+'px;width:8px;height:'+(rr.height/zoom+24)+'px';
+    }else{
+      var yy;
+      if(t.ri===0)yy=rs[0].getBoundingClientRect().top-32*zoom;
+      else if(t.ri>=rs.length)yy=rs[rs.length-1].getBoundingClientRect().bottom+32*zoom;
+      else yy=(rs[t.ri-1].getBoundingClientRect().bottom+rs[t.ri].getBoundingClientRect().top)/2;
+      ind.className='ind h';ind.style.cssText='left:128px;width:1024px;top:'+((yy-br.top)/zoom-4)+'px;height:8px';
+    }
+  }
+  var asT=null,asV={x:0,y:0};
+  function autoscroll(x,y){var cv=$('cv');if(!cv)return;var r=cv.getBoundingClientRect();asV.y=y<r.top+50?-16:y>r.bottom-50?16:0;asV.x=x<r.left+50?-16:x>r.right-50?16:0;if((asV.x||asV.y)&&!asT){asT=setInterval(function(){cv.scrollTop+=asV.y;cv.scrollLeft+=asV.x;},16);}if(!asV.x&&!asV.y)stopAuto();}
+  function stopAuto(){clearInterval(asT);asT=null;}
+  addEventListener('keydown',function(e){
+    if(!/#\/rozvrzeni/.test(location.hash)||$('app').hidden)return;
+    if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?doRedo():doUndo();return;}
+    if(!sel)return;
+    if(e.key==='Escape'){sel=null;renderLayout();}
+    else if(e.key==='ArrowLeft'){e.preventDefault();stepItem(-1);}
+    else if(e.key==='ArrowRight'){e.preventDefault();stepItem(1);}
+    else if((e.key==='Delete'||e.key==='Backspace')&&page==='overview'){e.preventDefault();removeSel();}
+  });
+
+  /* ---------- basic mode: rows with sliders ---------- */
+  var bdev='desk';
+  function layoutBasic(){
+    $('content').innerHTML='<div class="lay basic"><div class="lay-l"><div class="lay-bar">'+tabsHtml()+
+      '<div class="grp">'+modeSeg()+(page==='overview'?'<button class="btn sm" type="button" id="addOv">'+IC.plus+'Přidat fotku</button>':'')+'<button class="btn sm ghost" type="button" id="un" aria-label="Zpět">'+IC.undo+'</button><button class="btn sm ghost" type="button" id="re" aria-label="Znovu">'+IC.redo+'</button></div></div>'+
+      '<div class="flist" id="flist"></div></div>'+
+      '<div class="lay-r"><div class="pane" style="flex:1;display:flex;flex-direction:column;min-height:0"><h4>Náhled webu <span class="seg" id="bdSeg"><button type="button" data-bd="desk">'+IC.desk+'Počítač</button><button type="button" data-bd="tab">'+IC.tablet+'Tablet</button><button type="button" data-bd="mob">'+IC.phone+'Mobil</button></span></h4><div class="pvwrap" id="bBox"></div><p class="hint" style="text-align:center">Skutečný web s tvými nezveřejněnými změnami</p></div></div></div>';
+    $('un').onclick=doUndo;$('re').onclick=doRedo;if($('addOv'))$('addOv').onclick=addToOverview;bindMode();
+    $$('#bdSeg button').forEach(function(b){b.onclick=function(){bdev=b.dataset.bd;mountBasicPreview();};});
+    mountBasicPreview();renderBasic();
+  }
+  function mountBasicPreview(){
+    $$('#bdSeg button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.bd===bdev);});
+    var box=$('bBox');frames=[];if(!box)return;
+    var avail=Math.max(240,box.clientWidth-8),W={desk:1280,tab:820,mob:390}[bdev],H={desk:1500,tab:1180,mob:844}[bdev],dev=bdev!=='desk';
+    var s=Math.min(dev?.8:1,(avail-(dev?20:2))/W);
+    box.innerHTML='<div class="pv-d'+(dev?' dev':'')+'" style="width:'+(W*s+(dev?20:2))+'px;height:'+(H*s+(dev?20:2))+'px"></div>';
+    var f=mkFrame(page==='overview'?'':page,W,H,false);f.style.transform='scale('+s+')';box.firstChild.appendChild(f);
+  }
+  addEventListener('resize',function(){if(MODE==='basic'&&$('bBox'))mountBasicPreview();});
+  function renderBasic(){
+    var el=$('flist');if(!el)return;var rs=rows();
+    el.innerHTML='<p class="hint" style="padding:0 2px">Stránka se skládá z řádků. Posuvníkem nastavíš velikost fotky, šipkami ji posuneš a řádek můžeš kdekoliv rozdělit.</p>'+rs.map(function(r,ri){
+      var w=LH.rowWidth(r);
+      return '<div class="rcard" data-ri="'+ri+'"><div class="rcard-h"><span>Řádek '+(ri+1)+' <span class="dim" style="font-weight:500">· '+Math.round(w)+' %'+(w>100?' · <span style="color:var(--warn)">zmenší se</span>':'')+'</span></span><span style="display:flex;gap:6px;align-items:center">'+
+        '<span class="seg">'+['l','c','r','j'].map(function(k){return '<button type="button" data-ra="'+ri+','+k+'" aria-pressed="'+((r.a||'c')===k)+'" title="'+AL[k]+'" aria-label="'+AL[k]+'">'+ALI[k]+'</button>';}).join('')+'</span>'+
+        (ri?'<button type="button" class="ib" data-merge="'+ri+'" title="Spojit s řádkem nad" aria-label="Spojit s řádkem nad">'+IC.merge+'</button>':'')+'</span></div>'+
+        r.items.map(function(it,ii){
+          var p=photoProj(it.id),first=ri===0&&ii===0,last=ri===rs.length-1&&ii===r.items.length-1,wv=Math.round(LH.width(it));
+          return '<div class="fit" data-ri="'+ri+'" data-ii="'+ii+'"><img src="'+th(it.id)+'" alt=""><span class="nm">'+esc(p?p.title:'Fotka')+'<small>'+esc(p?p.client:'')+'</small></span>'+
+            '<span class="mv"><button type="button" class="ib" data-up="'+ri+','+ii+'" '+(first?'disabled':'')+' title="Posunout dopředu" aria-label="Posunout dopředu">'+IC.up+'</button><button type="button" class="ib" data-dn="'+ri+','+ii+'" '+(last?'disabled':'')+' title="Posunout dozadu" aria-label="Posunout dozadu">'+IC.down+'</button>'+
+            '<button type="button" class="ib" data-split="'+ri+','+ii+'" '+(ii?'':'disabled')+' title="Začít tady nový řádek" aria-label="Začít tady nový řádek">'+IC.split+'</button>'+(page==='overview'?'<button type="button" class="ib" data-rm="'+ri+','+ii+'" title="Odebrat z Overview" aria-label="Odebrat z Overview">'+IC.trash+'</button>':'')+'</span>'+
+            '<span class="sl"><input type="range" min="'+LH.MINW+'" max="70" step="1" value="'+wv+'" data-sz="'+ri+','+ii+'" aria-label="Velikost fotky"><b data-szl="'+ri+','+ii+'">'+wLabel(it)+'</b></span></div>';
+        }).join('')+'</div>';
+    }).join('');
+    var P=function(v){return v.split(',').map(Number);};
+    $$('[data-ra]',el).forEach(function(b){b.onclick=function(){var a=b.dataset.ra.split(',');snap();rows()[+a[0]].a=a[1];changed();renderBasic();};});
+    $$('[data-sz]',el).forEach(function(s){
+      var a=P(s.dataset.sz),started=false;
+      s.addEventListener('input',function(){if(!started){snap();started=true;}var it=rows()[a[0]].items[a[1]];setWidth(it,+s.value,false);el.querySelector('[data-szl="'+s.dataset.sz+'"]').textContent=wLabel(it);pushPreview();});
+      s.addEventListener('change',function(){started=false;changed();renderBasic();});
+    });
+    $$('[data-merge]',el).forEach(function(b){b.onclick=function(){snap();mergeUp(+b.dataset.merge);changed();renderBasic();pushPreview();};});
+    $$('[data-split]',el).forEach(function(b){b.onclick=function(){var a=P(b.dataset.split);snap();splitAt(a[0],a[1]);changed();renderBasic();pushPreview();};});
+    $$('[data-rm]',el).forEach(function(b){b.onclick=function(){var a=P(b.dataset.rm);sel={ri:a[0],ii:a[1]};removeSel();};});
+    $$('[data-up]',el).forEach(function(b){b.onclick=function(){var a=P(b.dataset.up);sel={ri:a[0],ii:a[1]};stepItem(-1);flash();};});
+    $$('[data-dn]',el).forEach(function(b){b.onclick=function(){var a=P(b.dataset.dn);sel={ri:a[0],ii:a[1]};stepItem(1);flash();};});
+    function flash(){if(!sel)return;var x=el.querySelector('.fit[data-ri="'+sel.ri+'"][data-ii="'+sel.ii+'"]');if(x)x.classList.add('flash');sel=null;}
+  }
+
+  /* ---------- texty ---------- */
+  function pgTexts(){
+    $('title').textContent='Texty a kontakt';
+    var i=draft.info;
+    $('content').innerHTML='<div class="split"><div class="content" style="border-right:1px solid var(--line)"><div class="page">'+
+      '<p class="muted">Texty pro stránku Info („Work with me.“) a patičku webu.</p>'+
+      '<div class="form2" style="margin-top:16px"><label class="field full"><span>O mně (anglicky)</span><textarea class="inp" id="t-bio" rows="5" data-i="bio">'+esc(i.bio)+'</textarea></label>'+
+      '<label class="field"><span>E-mail</span><input class="inp" id="t-email" data-i="email" value="'+esc(i.email)+'"></label>'+
+      '<label class="field"><span>Instagram</span><input class="inp" id="t-ig" data-i="instagram" value="'+esc(i.instagram)+'"></label></div>'+
+      '<h3>Vybraní klienti</h3><div class="tags">'+i.clients.map(function(c,k){return '<span>'+esc(c)+'<button type="button" data-rmc="'+k+'" aria-label="Odebrat">'+IC.x+'</button></span>';}).join('')+'</div>'+
+      '<div style="display:flex;gap:8px;margin-top:10px;max-width:420px"><input class="inp" id="newC" placeholder="Přidat klienta, např. Adidas"><button class="btn" type="button" id="addC">Přidat</button></div>'+
+      '</div></div><div class="lay-r"><div class="pane" style="flex:1"><h4>Náhled stránky Info</h4><div class="pvwrap" id="tBox"></div></div></div></div>';
+    frames=[];var box=$('tBox');box.innerHTML='<div class="pv-d dev" style="width:'+(390*.7+20)+'px;height:'+(844*.7+20)+'px"></div>';
+    var f=mkFrame('info',390,844,false);f.style.transform='scale(.7)';box.firstChild.appendChild(f);
+    $$('[data-i]').forEach(function(inp){inp.addEventListener('input',function(){i[inp.dataset.i]=inp.value;note('info','Texty a kontakt');save();});});
+    $$('[data-rmc]').forEach(function(b){b.onclick=function(){i.clients.splice(+b.dataset.rmc,1);note('info','Texty a kontakt');save();pgTexts();};});
+    var add=function(){var v=$('newC').value.trim();if(!v)return;i.clients.push(v);note('info','Texty a kontakt');save();pgTexts();};
+    $('addC').onclick=add;$('newC').onkeydown=function(e){if(e.key==='Enter')add();};
+  }
+
+  /* ---------- historie ---------- */
+  function pgHistory(){
+    $('title').textContent='Historie';
+    $('content').innerHTML='<div class="page"><p class="muted">Každé zveřejnění se uloží. Kteroukoliv verzi můžeš vrátit do konceptu a znovu zveřejnit.</p>'+
+      (hist.length?'<ul class="card hist" style="margin-top:16px;padding:0">'+hist.map(function(h,k){return '<li><span class="dt">'+esc(fmtT(h.t))+'</span><ul>'+(h.msgs.length?h.msgs:['Úpravy obsahu']).map(function(m){return '<li style="list-style:disc;padding:0;border:0">'+esc(m)+'</li>';}).join('')+'</ul>'+(k===0?'<span class="chip">Na webu</span>':'<button class="btn sm" type="button" data-rest="'+k+'">Vrátit do konceptu</button>')+'</li>';}).join('')+'</ul>'
+        :'<div class="card" style="margin-top:16px;padding:20px"><p class="muted">Zatím nic nebylo zveřejněno. Web teď ukazuje výchozí obsah.</p></div>')+'</div>';
+    $$('[data-rest]').forEach(function(b){b.onclick=function(){
+      var h=hist[+b.dataset.rest];
+      var applyIt=function(d){draft=d;note('restore','Vrácená verze z '+fmtT(h.t));save();toast('Verze z '+esc(fmtT(h.t))+' je v konceptu. Zveřejni ji, až budeš chtít.');route();};
+      if(OFFLINE){if(h.snap)applyIt(LH.clone(h.snap));return;}
+      api('/api/restore',{method:'POST',body:{key:h.key}}).then(function(r){applyIt(r.draft);},function(e){toast(esc(e.message));});
+    };});
+  }
+
+  /* ---------- publish ---------- */
+  function openPublish(){
+    if(!dirty()){toast('Nic nového ke zveřejnění.');return;}
+    var msgs=(log.length?log:[{m:'Úpravy obsahu'}]).map(function(x){return x.m;});
+    var m=modal('<h3>Zveřejnit změny</h3><p class="muted">Změny se hned objeví na webu. Předchozí verze zůstane v Historii.</p><ul style="padding-left:18px;display:flex;flex-direction:column;gap:4px">'+msgs.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul><div class="bar" id="pBar" hidden><i></i></div><div class="acts"><button class="btn" type="button" data-close>Zrušit</button><button class="btn pri" type="button" id="goPub">Zveřejnit</button></div>');
+    $('goPub').onclick=function(){
+      var bar=$('pBar');bar.hidden=false;m.querySelector('.acts').innerHTML='<span class="hint">Zveřejňuji…</span>';setTimeout(function(){bar.firstChild.style.width='70%';},30);
+      var finish=function(){
+        bar.firstChild.style.width='100%';pub=LH.clone(draft);log=[];LS.set('lh-log',log);doGuide('publish');status();
+        m.querySelector('.dlg').innerHTML='<h3>Hotovo, web je aktualizovaný</h3><p class="muted">Kdyby něco nesedělo, předchozí verzi vrátíš v Historii.</p><div class="acts"><button class="btn" type="button" data-close>Zavřít</button><a class="btn pri" href="/" target="_blank" rel="noopener">Otevřít web</a></div>';
+        if(/prehled/.test(location.hash||'#/prehled'))pgHome();
+      };
+      if(OFFLINE){LS.set('lh-pub',draft);hist.unshift({t:Date.now(),msgs:msgs,snap:LH.clone(draft)});hist=hist.slice(0,8);LS.set('lh-hist',hist);setTimeout(finish,500);return;}
+      clearTimeout(saveT);
+      api('/api/publish',{method:'POST',body:{site:draft,msgs:msgs}}).then(function(r){hist=r.hist||hist;finish();},function(e){m.querySelector('.acts').innerHTML='<span class="err">'+esc(e.message)+'</span><button class="btn" type="button" data-close>Zavřít</button>';});
+    };
+  }
+
+  /* ---------- modal ---------- */
+  function modal(html){
+    var ov=document.createElement('div');ov.className='ov';ov.innerHTML='<div class="dlg" role="dialog" aria-modal="true">'+html+'</div>';
+    document.body.appendChild(ov);requestAnimationFrame(function(){ov.classList.add('open');});
+    ov.addEventListener('click',function(e){if(e.target===ov||e.target.closest('[data-close]'))closeModal(ov);});
+    return ov;
+  }
+  function closeModal(ov){ov.classList.remove('open');setTimeout(function(){ov.remove();if(ov._onclose)ov._onclose();},200);}
+  function confirmBox(t,txt,yes,lbl){var m=modal('<h3>'+esc(t)+'</h3><p class="muted">'+esc(txt)+'</p><div class="acts"><button class="btn" type="button" data-close>Zrušit</button><button class="btn pri" type="button" id="cYes">'+(lbl||'Smazat')+'</button></div>');$('cYes').onclick=function(){closeModal(m);yes();};}
+
+  $('publish').onclick=openPublish;
+  $('logout').onclick=function(){if(OFFLINE)return;api('/api/logout',{method:'POST'}).then(function(){showLogin();});};
+  $('reset').onclick=function(){confirmBox('Vrátit ukázku do výchozího stavu?','Smaže se zveřejněný obsah, koncept, historie i nahrané fotky a web ukáže původní ukázkový obsah.',function(){
+    ['lh-log','lh-guide','lh-draft','lh-pub','lh-hist'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+    if(OFFLINE){location.reload();return;}
+    api('/api/reset',{method:'POST'}).then(function(){location.hash='#/prehled';location.reload();},function(e){toast(esc(e.message));});
+  },'Vrátit');};
+  addEventListener('beforeunload',function(e){if(saveT){flushDraft();e.preventDefault();e.returnValue='';}});
+  start();
+})();
+</script>
+</body>
+</html>
