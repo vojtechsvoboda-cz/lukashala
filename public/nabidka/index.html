@@ -28,7 +28,10 @@ a{color:inherit}
 :focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .col{max-width:880px;margin:0 auto}
 .mast{text-align:center;padding-block:56px 36px}
-.mast .k{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.tnav{display:inline-flex;gap:2px;background:var(--tint);border-radius:99px;padding:3px}
+.tnav button{height:32px;padding:0 14px;border-radius:99px;font-size:13.5px;font-weight:500;color:var(--ink-2);transition:color .2s,background .2s}
+.tnav button:hover{color:var(--ink)}
+.tnav button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .mast h1{font:400 clamp(40px,7vw,60px)/1.1 var(--serif);letter-spacing:-.01em;margin-top:18px}
 .mast em{display:block;font:italic 400 clamp(24px,4vw,32px)/1.2 var(--serif)}
 .mast p{max-width:48ch;margin:22px auto 0;color:var(--ink-2);text-wrap:balance}
@@ -85,7 +88,7 @@ html.lenis,html.lenis body{height:auto}
 .opt{transition:border-color .25s,box-shadow .25s,transform .25s}
 .opt:hover{border-color:#cfccc6;box-shadow:0 18px 40px -28px rgba(0,0,0,.35);transform:translateY(-2px)}
 .shot iframe{transition:transform .6s}
-.mast h1,.mast em,.mast p,.mast .k{animation:up .9s cubic-bezier(.2,.7,.15,1) both}
+.mast h1,.mast em,.mast p,.mast .tnav{animation:up .9s cubic-bezier(.2,.7,.15,1) both}
 .mast em{animation-delay:.08s}.mast p{animation-delay:.16s}
 @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
@@ -117,14 +120,13 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
 <body>
 <div class="col">
   <header class="mast">
-    <div class="k">Návrh webu</div>
+    <nav class="tnav" aria-label="Menu"><button type="button" class="on" aria-current="page">Nabídka</button><button type="button" data-open="web">Web</button><button type="button" data-open="admin">Administrace</button></nav>
     <h1>Lukáš Hála</h1>
     <em>Imaginis Production</em>
     <p>Takhle by vypadal tvůj web. Projdi si ho v klidu a vyber, která ze dvou možností ti sedí víc.</p>
   </header>
 
   <a class="shot" id="shot" href="#web" aria-label="Prohlédnout web"><iframe id="shotF" title="Náhled webu" tabindex="-1" loading="lazy"></iframe><span class="go">Prohlédnout web</span></a>
-  <p class="cap">Ukázka s tvými fotkami. Funguje i na mobilu.</p>
 
   <section aria-labelledby="h-opts">
     <h2 id="h-opts">Dvě možnosti</h2>
@@ -155,17 +157,16 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
         <p class="n">Nové projekty si přidáváš sám, kdykoliv a bez poplatku.</p>
       </article>
     </div>
-    <p class="note">Cena je nižší než u webu na míru od nuly, protože jsi první fotograf s tímhle řešením a web bych mohl ukazovat jako referenci.</p>
   </section>
 
   <section aria-labelledby="h-list">
     <h2 id="h-list">Ceník úprav</h2>
     <p class="lede">Vždycky předem víš, kolik co stojí.</p>
     <div class="list">
-      <div class="r"><span>Drobná úprava</span><b>400 Kč</b><small>do 30 minut, třeba výměna fotky, textu nebo oprava popisku</small></div>
-      <div class="r"><span>Nový projekt</span><b>800 Kč</b><small>úprava fotek pro web, nahrání a rozvržení na stránce</small></div>
-      <div class="r"><span>Větší změna</span><b>předem domluvíme</b><small>nová stránka nebo funkce</small></div>
+      <div class="r"><span>Drobná úprava do půl hodiny</span><b>400 Kč</b><small>třeba pár nových fotek nebo výměna textu</small></div>
+      <div class="r"><span>Větší úprava</span><b>800 Kč</b><small>víc fotek a nové rozvržení stránky</small></div>
     </div>
+    <p class="note">Klidně se u toho potkáme, nebo si dáme rychlý Google Meet. Rád pomůžu.</p>
   </section>
 
   <section aria-labelledby="h-faq">
@@ -184,7 +185,7 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
 
 <div class="vw" id="vw" hidden role="dialog" aria-modal="true" aria-label="Ukázka">
   <div class="vw-bar">
-    <div class="tabs" id="tabs"><button type="button" data-t="web">Web</button><button type="button" data-t="admin">Administrace</button></div>
+    <div class="tabs" id="tabs"><button type="button" data-t="offer">Nabídka</button><button type="button" data-t="web">Web</button><button type="button" data-t="admin">Administrace</button></div>
     <button class="x" type="button" id="vwX" aria-label="Zavřít"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
   </div>
   <iframe id="vwF" title="Ukázka"></iframe>
@@ -207,7 +208,7 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
   var close=function(){$('vw').hidden=true;$('vwF').src='about:blank';document.documentElement.style.overflow='';if(last)last.focus();}
   $('shot').addEventListener('click',function(e){e.preventDefault();open('web');});
   [].forEach.call(document.querySelectorAll('[data-open]'),function(b){b.onclick=function(){open(b.dataset.open);};});
-  $('tabs').addEventListener('click',function(e){var b=e.target.closest('[data-t]');if(b)show(b.dataset.t);});
+  $('tabs').addEventListener('click',function(e){var b=e.target.closest('[data-t]');if(!b)return;if(b.dataset.t==='offer')close();else show(b.dataset.t);});
     addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('vw').hidden)close();});
   addEventListener('message',function(e){if(e.data&&e.data.type==='lh-open-web'&&!$('vw').hidden)show('web');});
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
