@@ -360,6 +360,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   var $$=function(s,r){return [].slice.call((r||document).querySelectorAll(s));};
   var esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var LS={get:function(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}};
+  /* ?demo=1: try-out admin that keeps everything in this browser and never touches the live site */
+  var DEMO=/[?&]demo=1/.test(location.search),P=DEMO?'lhdemo-':'lh-',WEB=DEMO?'/?demo=1':'/';
   var qMode=(/[?&]mode=(canvas|basic)/.exec(location.search)||[])[1];
   var MODE=qMode||LS.get('lh-mode')||'canvas';
   /* admin calls the overview page "Homepage"; the website itself keeps "Overview" in its menu */
@@ -413,15 +415,15 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   }
 
   /* ---------- state ---------- */
-  var pub=null,draft=null,hist=[],log=LS.get('lh-log')||[],guide=LS.get('lh-guide')||{};
+  var pub=null,draft=null,hist=[],log=LS.get(P+'log')||[],guide=LS.get(P+'guide')||{};
   function pubOrDefault(){return pub||LH.defaultSite();}
   function proj(id){for(var i=0;i<draft.projects.length;i++)if(draft.projects[i].id===id)return draft.projects[i];return null;}
   function photoProj(id){return LH.projectOf(draft,id);}
   function th(id){return LH.src(draft,id,IMG);}
   var saveT=null,saving=false;
   function save(){
-    LS.set('lh-log',log);status();pushPreview();
-    if(OFFLINE){LS.set('lh-draft',draft);return;}
+    LS.set(P+'log',log);status();pushPreview();
+    if(OFFLINE){LS.set(P+'draft',draft);return;}
     clearTimeout(saveT);status('saving');
     saveT=setTimeout(flushDraft,1200);
   }
@@ -444,7 +446,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       draft=LH.clone(pubOrDefault());if(!draft.extra)draft.extra={};log=[];undo=[];redo=[];save();route();toast('Změny jsou zahozené. Administrace odpovídá webu.');
     },'Zahodit');
   }
-  function doGuide(k){if(!guide[k]){guide[k]=1;LS.set('lh-guide',guide);}}
+  function doGuide(k){if(!guide[k]){guide[k]=1;LS.set(P+'guide',guide);}}
   var tT;function toast(html,ms){var t=$('toast');t.innerHTML=html;t.classList.add('on');clearTimeout(tT);tT=setTimeout(function(){t.classList.remove('on');},ms||3400);}
   function fmtT(t){if(typeof t==='string')return t;var d=new Date(t),n=new Date();var hm=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');return d.toDateString()===n.toDateString()?'dnes '+hm:d.getDate()+'. '+(d.getMonth()+1)+'. '+hm;}
 
@@ -466,10 +468,14 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   }
   function boot(){$('login').hidden=true;$('app').hidden=false;$('offline').hidden=!OFFLINE;route();status();}
   function start(){
+    if(DEMO){OFFLINE=true;pub=LS.get(P+'pub');hist=LS.get(P+'hist')||[];
+      var go=function(base){draft=LS.get(P+'draft')||LH.clone(pub||base||LH.defaultSite());if(!draft.extra)draft.extra={};if(!pub&&base)pub=base;boot();};
+      fetch('/api/site',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(x){go(x&&x.v===1?x:null);},function(){go(null);});
+      $('offline').textContent='Zkušební administrace: změny se ukládají jen v tomto prohlížeči a ostrý web nijak nemění.';$('logout').hidden=true;$('toWeb').href=WEB;return;}
     api('/api/me').then(function(r){if(r&&r.ok)return loadState();showLogin();}).catch(function(e){
       if(e.status===401)return showLogin();
       /* no server (local file preview): keep everything in this browser */
-      OFFLINE=true;pub=LS.get('lh-pub');draft=LS.get('lh-draft')||LH.clone(pubOrDefault());hist=LS.get('lh-hist')||[];boot();
+      OFFLINE=true;pub=LS.get(P+'pub');draft=LS.get(P+'draft')||LH.clone(pubOrDefault());hist=LS.get(P+'hist')||[];boot();
     });
   }
 
@@ -708,7 +714,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   var page='overview',undo=[],redo=[],sel=null,frames=[];
   function rows(){return draft.layouts[page];}
   function snap(){undo.push(JSON.stringify(rows()));if(undo.length>80)undo.shift();redo=[];}
-  function changed(){setTimeout(undoState,0);note('layout:'+page,'Rozvržení stránky '+CAT[page]);doGuide('layout');guide.lastCat=page;LS.set('lh-guide',guide);save();}
+  function changed(){setTimeout(undoState,0);note('layout:'+page,'Rozvržení stránky '+CAT[page]);doGuide('layout');guide.lastCat=page;LS.set(P+'guide',guide);save();}
   function doUndo(){if(!undo.length)return;redo.push(JSON.stringify(rows()));draft.layouts[page]=JSON.parse(undo.pop());sel=null;changed();renderLayout();}
   function doRedo(){if(!redo.length)return;undo.push(JSON.stringify(rows()));draft.layouts[page]=JSON.parse(redo.pop());sel=null;changed();renderLayout();}
   function tabsHtml(){return '<div class="tabs">'+['overview'].concat(D.cats.map(function(c){return c[0];})).map(function(k){return '<a href="#/rozvrzeni/'+k+'" class="'+(k===page?'on':'')+'">'+CAT[k]+'</a>';}).join('')+'</div>';}
@@ -1097,11 +1103,11 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     $('goPub').onclick=function(){
       var bar=$('pBar');bar.hidden=false;m.querySelector('.acts').innerHTML='<span class="hint">Zveřejňuji…</span>';setTimeout(function(){bar.firstChild.style.width='70%';},30);
       var finish=function(){
-        bar.firstChild.style.width='100%';pub=LH.clone(draft);log=[];LS.set('lh-log',log);doGuide('publish');status();
-        m.querySelector('.dlg').innerHTML='<h3>Hotovo, web je aktualizovaný</h3><p class="muted">Kdyby něco nesedělo, předchozí verzi vrátíš v Historii.</p><div class="acts"><button class="btn" type="button" data-close>Zavřít</button><a class="btn pri" href="/" target="_blank" rel="noopener">Otevřít web</a></div>';
+        bar.firstChild.style.width='100%';pub=LH.clone(draft);log=[];LS.set(P+'log',log);doGuide('publish');status();
+        m.querySelector('.dlg').innerHTML='<h3>Hotovo, web je aktualizovaný</h3><p class="muted">Kdyby něco nesedělo, předchozí verzi vrátíš v Historii.</p><div class="acts"><button class="btn" type="button" data-close>Zavřít</button><a class="btn pri" href="'+WEB+'" target="_blank" rel="noopener">Otevřít web</a></div>';
         if(/prehled/.test(location.hash||'#/prehled'))pgHome();
       };
-      if(OFFLINE){LS.set('lh-pub',draft);hist.unshift({t:Date.now(),msgs:msgs,snap:LH.clone(draft)});hist=hist.slice(0,HIST_KEEP);LS.set('lh-hist',hist);setTimeout(finish,500);return;}
+      if(OFFLINE){LS.set(P+'pub',draft);hist.unshift({t:Date.now(),msgs:msgs,snap:LH.clone(draft)});hist=hist.slice(0,HIST_KEEP);LS.set(P+'hist',hist);setTimeout(finish,500);return;}
       clearTimeout(saveT);
       api('/api/publish',{method:'POST',body:{site:draft,msgs:msgs}}).then(function(r){hist=r.hist||hist;finish();},function(e){m.querySelector('.acts').innerHTML='<span class="err">'+esc(e.message)+'</span><button class="btn" type="button" data-close>Zavřít</button>';});
     };

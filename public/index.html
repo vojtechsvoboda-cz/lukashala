@@ -27,20 +27,23 @@ a{color:inherit;text-decoration:none}
 .cats{text-align:center;padding:30px 20px 0}
 .cats a{white-space:nowrap}
 main{padding:clamp(56px,9vw,110px) 0 40px;transition:opacity .45s ease}
-body.viewing .mast,body.viewing .cats{display:none}
-body.viewing main{padding-top:0}
 main.out{opacity:0}
 footer{text-align:center;padding:40px 20px 48px;color:var(--muted);font-size:12.5px}
 footer a{color:var(--fg)}
-/* viewer */
-.vw{position:relative;min-height:calc(100vh - 70px);display:flex;flex-direction:column;align-items:center;padding:28px 20px 40px}
-.vw-h{width:min(1100px,100%);display:flex;justify-content:space-between;align-items:center;text-transform:uppercase}
-.vw-x{font-size:26px;line-height:1;padding:4px 8px;cursor:pointer;background:none;border:0;color:inherit}
-.vw-stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:24px 0;cursor:e-resize;user-select:none}
-.vw-stage.prev{cursor:w-resize}
-.vw-stage img{max-width:min(1000px,100%);max-height:calc(100vh - 230px);width:auto;height:auto;display:block;transition:opacity .35s}
-.vw-cap{color:var(--muted);text-align:center;letter-spacing:.03em}
-.vw-f{display:flex;gap:28px;align-items:center;margin-top:10px}
+/* viewer: just the photo on white and a close button */
+.vw{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;align-items:center;justify-content:center;
+  padding:calc(64px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(48px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
+  cursor:zoom-out;animation:vwin .35s ease both}
+@keyframes vwin{from{opacity:0}to{opacity:1}}
+.vw img{display:block;max-width:min(1400px,100%);max-height:100%;width:auto;height:auto;object-fit:contain;animation:vwimg .5s cubic-bezier(.2,.7,.15,1) both}
+@keyframes vwimg{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
+.vw-x{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px));width:44px;height:44px;display:grid;place-items:center;color:var(--fg);opacity:.7;transition:opacity .2s;cursor:pointer}
+.vw-x:hover{opacity:1}
+.vw-x svg{width:20px;height:20px}
+body.viewing{overflow:hidden}
+.credit{display:inline-block;margin-top:14px;color:var(--muted)!important;text-decoration:none}
+.credit:hover{color:var(--fg)!important}
+@media (prefers-reduced-motion: reduce){.vw,.vw img{animation:none}}
 /* info */
 .info{width:min(640px,calc(100vw - 40px));margin:0 auto;text-align:center}
 .info p.bio{font:400 clamp(22px,2.6vw,28px)/1.35 var(--serif);letter-spacing:0}
@@ -80,40 +83,41 @@ footer a{color:var(--fg)}
   }
   function foot(){
     var i=site.info;
-    document.getElementById('foot').innerHTML='<a class="u" href="mailto:'+i.email+'">'+i.email+'</a>, <a class="u" href="https://instagram.com/'+i.instagram+'" target="_blank" rel="noopener">Instagram</a><br>Website by vojtechsvoboda.cz';
+    document.getElementById('foot').innerHTML='<a class="u" href="mailto:'+i.email+'">'+i.email+'</a>, <a class="u" href="https://instagram.com/'+i.instagram+'" target="_blank" rel="noopener">Instagram</a><br><a class="credit" href="https://vojtechsvoboda.cz" target="_blank" rel="noopener">Website by vojtechsvoboda.cz</a>';
   }
   function grid(cat){
     if(cat!=='overview'&&!site.layouts[cat])LH.syncLayout(site,cat);
     return LH.rowsHtml(site,site.layouts[cat]||[],{base:BASE,lazy:!PREVIEW,href:function(it){return '#/'+cat+'/'+it.id;}});
   }
   function viewer(cat,id){
-    var s=seq(cat),i=Math.max(0,s.indexOf(id)),p=LH.projectOf(site,id);
-    var cap=p?(p.title+' — '+p.client+(p.year?', '+p.year:'')):'';
-    return '<section class="vw"><div class="vw-h"><span>Lukáš Hála – '+catName(cat)+'</span><a class="vw-x" href="#/'+(cat==='overview'?'':cat)+'" aria-label="Close">×</a></div>'+
-      '<div class="vw-stage" id="stage"><img src="'+LH.src(site,id,BASE)+'" alt="'+cap.replace(/"/g,'')+'"></div>'+
-      '<p class="vw-cap">'+cap+'</p><div class="vw-f"><a class="u" href="#/'+(cat==='overview'?'':cat)+'">View all</a><span>'+(i+1)+'/'+s.length+'</span></div></section>';
+    var p=LH.projectOf(site,id),alt=p?(p.title+' — '+p.client):'';
+    return '<section class="vw" id="stage"><img src="'+LH.src(site,id,BASE)+'" alt="'+alt.replace(/"/g,'')+'"><a class="vw-x" href="#/'+(cat==='overview'?'':cat)+'" aria-label="Close"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 3l14 14M17 3L3 17"/></svg></a></section>';
   }
   function info(){
     var i=site.info;
     return '<section class="info"><p class="bio">'+i.bio+'</p><h2>Selected clients</h2><ul>'+i.clients.map(function(c){return '<li>'+c+'</li>';}).join('')+
       '</ul><h2>Contact</h2><ul><li><a class="u" href="mailto:'+i.email+'">'+i.email+'</a></li><li><a class="u" href="https://instagram.com/'+i.instagram+'" target="_blank" rel="noopener">@'+i.instagram+'</a></li></ul></section>';
   }
-  var main=document.getElementById('main'),last=null;
-  function render(fade){
-    var r=route(),key=r.cat+'/'+(r.photo||'');
-    var html=r.cat==='info'?info():(r.photo?viewer(r.cat,r.photo):grid(r.cat));
-    nav(r.cat); foot();
-    var setMode=function(){document.body.classList.toggle('viewing',!!r.photo);};
-    var go=function(){setMode();main.innerHTML=html;main.classList.remove('out');if(!PREVIEW&&last!==null&&!r.photo)window.scrollTo(0,0);if(r.photo)window.scrollTo(0,0);last=key;bindViewer(r);};
-    if(fade&&!reduce&&!PREVIEW&&last!==key){main.classList.add('out');setTimeout(go,260);}else go();
+  var main=document.getElementById('main'),last=null,ov=null,keepY=0;
+  /* the photo opens as an overlay above the page, so closing it keeps the grid and the scroll position */
+  function showPhoto(r){
+    if(!ov){ov=document.createElement('div');document.body.appendChild(ov);}
+    if(!ov.innerHTML)keepY=window.scrollY;
+    ov.innerHTML=viewer(r.cat,r.photo);document.body.classList.add('viewing');
+    var back='#/'+(r.cat==='overview'?'':r.cat);
+    ov.firstChild.onclick=function(e){e.preventDefault();location.hash=back;};
+    document.onkeydown=function(e){if(e.key==='Escape')location.hash=back;};
   }
-  function bindViewer(r){
-    var st=document.getElementById('stage');if(!st)return;
-    var s=seq(r.cat),i=s.indexOf(r.photo);
-    function step(d){if(!s.length)return;location.hash='#/'+r.cat+'/'+s[(i+d+s.length)%s.length];}
-    st.onmousemove=function(e){var b=st.getBoundingClientRect();st.classList.toggle('prev',e.clientX<b.left+b.width/2);};
-    st.onclick=function(e){var b=st.getBoundingClientRect();step(e.clientX<b.left+b.width/2?-1:1);};
-    document.onkeydown=function(e){if(e.key==='ArrowRight')step(1);else if(e.key==='ArrowLeft')step(-1);else if(e.key==='Escape')location.hash='#/'+(r.cat==='overview'?'':r.cat);};
+  function hidePhoto(){var had=!!(ov&&ov.innerHTML);if(ov){ov.innerHTML='';}document.body.classList.remove('viewing');document.onkeydown=null;if(had)window.scrollTo(0,keepY);}
+  function render(fade){
+    var r=route(),page=r.cat;
+    nav(r.cat); foot();
+    if(r.photo){ if(last!==page){main.innerHTML=grid(page);last=page;} showPhoto(r); return; }
+    var wasPhoto=!!(ov&&ov.innerHTML);hidePhoto();
+    if(wasPhoto&&last===page)return;
+    var html=r.cat==='info'?info():grid(r.cat);
+    var go=function(){main.innerHTML=html;main.classList.remove('out');if(!PREVIEW&&last!==null)window.scrollTo(0,0);last=page;};
+    if(fade&&!reduce&&!PREVIEW&&last!==page){main.classList.add('out');setTimeout(go,260);}else go();
   }
   addEventListener('hashchange',function(){render(true);});
   /* published content from the server; the built-in default shows until it arrives (or if nothing is published yet) */
@@ -121,14 +125,16 @@ footer a{color:var(--fg)}
   addEventListener('message',function(e){
     var d=e.data;if(!d||d.type!=='lh-site')return;
     site=d.site; if(d.route!=null&&location.hash!=='#/'+d.route){history.replaceState(null,'','#/'+d.route);}
-    render(false);
+    last=null;render(false);
   });
   /* published content from the server; the built-in default is used if nothing is published yet */
   if(PREVIEW){render(false);parent.postMessage({type:'lh-ready'},'*');}
+  /* ?demo=1: show what the try-out admin published in this browser (nothing is sent to the server) */
+  else if(/[?&]demo=1/.test(location.search)&&(function(){try{var dl=JSON.parse(localStorage.getItem('lhdemo-pub')||'null');if(dl&&dl.v===1){site=dl;return true;}}catch(e){}return false;})()){render(false);}
   else{
     var done=false,first=function(){if(!done){done=true;render(false);}};
     setTimeout(first,1500);
-    fetch('/api/site',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(s){if(s&&s.v===1)site=s;else{try{var l=JSON.parse(localStorage.getItem('lh-pub')||'null');if(l&&l.v===1)site=l;}catch(e){}}}).catch(function(){}).then(function(){if(done)render(false);else first();});
+    fetch('/api/site',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(s){if(s&&s.v===1)site=s;else{try{var l=JSON.parse(localStorage.getItem('lh-pub')||'null');if(l&&l.v===1)site=l;}catch(e){}}}).catch(function(){}).then(function(){if(done){last=null;render(false);}else first();});
   }
 })();
 </script>

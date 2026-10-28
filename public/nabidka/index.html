@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>Web pro Lukáše Hálu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<style>
+/* Layout: one quiet column like his portfolio — serif masthead, the live site as the hero, two plain options, a short price list, questions on demand.
+   Deliberately single-theme light: it mirrors the white portfolio it sells. */
+:root{
+  --paper:#ffffff; --ink:#0d0d0d; --ink-2:#5b5a57; --ink-3:#8f8d88; --rule:#e7e5e1; --tint:#f6f5f2; --accent:#0d0d0d;
+  --serif:'Instrument Serif','Canela',Georgia,serif; --sans:'Libre Franklin',system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font:400 15px/1.6 var(--sans);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.col{max-width:880px;margin:0 auto}
+.mast{text-align:center;padding-block:56px 36px}
+.mast .k{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.mast h1{font:400 clamp(40px,7vw,60px)/1.1 var(--serif);letter-spacing:-.01em;margin-top:18px}
+.mast em{display:block;font:italic 400 clamp(24px,4vw,32px)/1.2 var(--serif)}
+.mast p{max-width:48ch;margin:22px auto 0;color:var(--ink-2);text-wrap:balance}
+
+/* live site preview */
+.shot{position:relative;display:block;width:100%;aspect-ratio:1280/820;max-width:100%;border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:var(--paper);cursor:pointer}
+.shot iframe{position:absolute;left:0;top:0;width:1280px;height:820px;border:0;transform-origin:0 0;pointer-events:none}
+.shot .go{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--ink);color:var(--paper);font-size:13.5px;font-weight:500;padding:10px 16px;border-radius:99px;white-space:nowrap;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
+.shot:hover .go{background:#333}
+.cap{font-size:13px;color:var(--ink-3);text-align:center;margin-top:10px}
+
+section{padding-block:56px 0}
+h2{font:400 clamp(28px,4.4vw,36px)/1.15 var(--serif);letter-spacing:-.005em;text-wrap:balance}
+.lede{color:var(--ink-2);margin-top:8px;max-width:60ch}
+
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:24px}
+.opt{border:1px solid var(--rule);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.opt h3{font:400 26px/1.15 var(--serif)}
+.opt .p{display:flex;flex-direction:column;gap:2px}
+.opt .p b{font-size:30px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
+.opt .p span{font-size:13.5px;color:var(--ink-2)}
+.opt ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14.5px}
+.opt li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:10px}
+.opt li::before{content:"";width:16px;height:16px;margin-top:3px;background:no-repeat center/14px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%230d0d0d' stroke-width='1.6'%3E%3Cpath d='M3 8.5l3 3 7-7.5'/%3E%3C/svg%3E")}
+.opt .n{font-size:13px;color:var(--ink-3);margin-top:auto}
+.opt .btn{align-self:flex-start}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:99px;border:1px solid var(--ink);font-size:14px;font-weight:500;transition:background .2s,color .2s}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn svg{width:14px;height:14px}
+.note{margin-top:16px;font-size:14px;color:var(--ink-2)}
+
+.list{margin-top:20px;border-top:1px solid var(--rule)}
+.list .r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 24px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.list .r b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.list .r small{grid-column:1/-1;color:var(--ink-3);font-size:13px}
+
+.faq{margin-top:20px;border-top:1px solid var(--rule)}
+.faq details{border-bottom:1px solid var(--rule)}
+.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0;font-weight:500}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary i{position:relative;flex:0 0 12px;height:12px}
+.faq summary i::before,.faq summary i::after{content:"";position:absolute;left:0;right:0;top:5px;height:1.5px;background:var(--ink-2);transition:transform .25s}
+.faq summary i::after{transform:rotate(90deg)}
+.faq details[open] summary i::after{transform:rotate(0)}
+.faq .a{overflow:hidden}
+.faq p{color:var(--ink-2);padding-bottom:18px;max-width:64ch}
+.faq summary:hover{color:var(--ink-2)}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+/* entrance: everything is visible at rest; JS only adds a short rise when a block first comes into view */
+.rv{transition:opacity .7s cubic-bezier(.2,.7,.15,1),transform .7s cubic-bezier(.2,.7,.15,1)}
+.rv.pre{opacity:0;transform:translateY(18px)}
+.opt{transition:border-color .25s,box-shadow .25s,transform .25s}
+.opt:hover{border-color:#cfccc6;box-shadow:0 18px 40px -28px rgba(0,0,0,.35);transform:translateY(-2px)}
+.shot iframe{transition:transform .6s}
+.mast h1,.mast em,.mast p,.mast .k{animation:up .9s cubic-bezier(.2,.7,.15,1) both}
+.mast em{animation-delay:.08s}.mast p{animation-delay:.16s}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48px}
+
+/* viewer */
+.vw{position:fixed;inset:0;z-index:50;background:var(--paper);display:flex;flex-direction:column}
+.vw-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--rule);background:var(--paper)}
+.tabs{display:inline-flex;gap:2px;background:var(--tint);border-radius:99px;padding:3px;min-width:0;overflow-x:auto}
+.tabs button{height:32px;padding:0 14px;border-radius:99px;font-size:13.5px;font-weight:500;color:var(--ink-2);white-space:nowrap}
+.tabs button[aria-pressed="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.x{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--rule);flex:0 0 auto}
+.x:hover{background:var(--tint)}
+.x svg{width:14px;height:14px}
+.vw iframe{flex:1;width:100%;border:0;background:var(--paper)}
+.vw-hint{font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--rule)}
+
+@media (max-width:700px){
+  .opts{grid-template-columns:1fr}
+  .mast{padding-block:40px 28px}
+  section{padding-block:44px 0}
+  .shot{aspect-ratio:390/620}
+  .shot iframe{width:390px;height:620px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.rv.pre{opacity:1;transform:none}}
+</style>
+
+</head>
+<body>
+<div class="col">
+  <header class="mast">
+    <div class="k">Návrh webu</div>
+    <h1>Lukáš Hála</h1>
+    <em>Imaginis Production</em>
+    <p>Takhle by vypadal tvůj web. Projdi si ho v klidu a vyber, která ze dvou možností ti sedí víc.</p>
+  </header>
+
+  <a class="shot" id="shot" href="#web" aria-label="Prohlédnout web"><iframe id="shotF" title="Náhled webu" tabindex="-1" loading="lazy"></iframe><span class="go">Prohlédnout web</span></a>
+  <p class="cap">Ukázka s tvými fotkami. Funguje i na mobilu.</p>
+
+  <section aria-labelledby="h-opts">
+    <h2 id="h-opts">Dvě možnosti</h2>
+    <p class="lede">Vzhled je u obou stejný. Liší se jen tím, kdo přidává nové projekty.</p>
+    <div class="opts">
+      <article class="opt">
+        <h3>Web</h3>
+        <div class="p"><b>8 000 Kč</b><span>jednorázově, provoz 1 200 Kč ročně</span></div>
+        <ul>
+          <li>Web podle reference s tvými projekty</li>
+          <li>Overview, Portrait, Fashion, Sport, Automotive, Info</li>
+          <li>Vyladěný pro mobil, rychlé načítání fotek</li>
+          <li>Napojení domény, hosting, zálohy a zabezpečení</li>
+        </ul>
+        <p class="n">Nové projekty mi pošleš a nahraju je podle ceníku níž.</p>
+      </article>
+      <article class="opt">
+        <h3>Web s administrací</h3>
+        <div class="p"><b>12 000 Kč</b><span>jednorázově, provoz 2 400 Kč ročně</span></div>
+        <ul>
+          <li>Všechno z první možnosti</li>
+          <li>Administrace na lukashala.cz/admin: projekty, fotky, texty</li>
+          <li>Rozvržení stránek posuvníky nebo přetahováním</li>
+          <li>Náhled na mobilu, zálohy posledních verzí</li>
+          <li>V provozu 4 drobné úpravy ročně</li>
+        </ul>
+        <button class="btn" type="button" data-open="admin"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 2.5l9 5.5-9 5.5z"/></svg>Vyzkoušet administraci</button>
+        <p class="n">Nové projekty si přidáváš sám, kdykoliv a bez poplatku.</p>
+      </article>
+    </div>
+    <p class="note">Cena je nižší než u webu na míru od nuly, protože jsi první fotograf s tímhle řešením a web bych mohl ukazovat jako referenci.</p>
+  </section>
+
+  <section aria-labelledby="h-list">
+    <h2 id="h-list">Ceník úprav</h2>
+    <p class="lede">Vždycky předem víš, kolik co stojí.</p>
+    <div class="list">
+      <div class="r"><span>Drobná úprava</span><b>400 Kč</b><small>do 30 minut, třeba výměna fotky, textu nebo oprava popisku</small></div>
+      <div class="r"><span>Nový projekt</span><b>800 Kč</b><small>úprava fotek pro web, nahrání a rozvržení na stránce</small></div>
+      <div class="r"><span>Větší změna</span><b>předem domluvíme</b><small>nová stránka nebo funkce</small></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-faq">
+    <h2 id="h-faq">Dobré vědět</h2>
+    <div class="faq" id="faq">
+      <details><summary>Co je v ročním provozu?<i></i></summary><div class="a"><p>Hosting, napojená doména, zálohy a zabezpečení. Web hlídám, a kdyby se něco pokazilo, vyřeším to za tebe.</p></div></details>
+      <details><summary>Jak se platí web?<i></i></summary><div class="a"><p>Polovina na začátku, polovina při spuštění.</p></div></details>
+      <details><summary>Můžu administraci přidat později?<i></i></summary><div class="a"><p>Kdykoliv, za 4 000 Kč jednorázově. Provoz se pak zvedne na 2 400 Kč ročně, protože administrace potřebuje vlastní databázi a úložiště pro tvoje fotky.</p></div></details>
+      <details><summary>Komu web patří?<i></i></summary><div class="a"><p>Tobě, včetně domény na tvoje jméno. Ke všemu dostaneš předávací protokol s přístupy.</p></div></details>
+      <details><summary>Kdo dodává fotky a texty?<i></i></summary><div class="a"><p>Ty. S výběrem a pořadím fotek rád pomůžu.</p></div></details>
+    </div>
+  </section>
+
+  <footer><a href="https://vojtechsvoboda.cz" target="_blank" rel="noopener" style="text-decoration:none">Vojtěch Svoboda · vojtechsvoboda.cz</a></footer>
+</div>
+
+<div class="vw" id="vw" hidden role="dialog" aria-modal="true" aria-label="Ukázka">
+  <div class="vw-bar">
+    <div class="tabs" id="tabs"><button type="button" data-t="web">Web</button><button type="button" data-t="admin">Administrace</button></div>
+    <button class="x" type="button" id="vwX" aria-label="Zavřít"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  </div>
+  <iframe id="vwF" title="Ukázka"></iframe>
+  <p class="vw-hint" id="vwHint"></p>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var SRC={web:'/?demo=1',admin:'/admin/?demo=1&mode=basic'};
+  var HINT={web:'Klikni na fotku pro zvětšení. Kategorie jsou nahoře pod jménem.',admin:'Zkušební administrace: zkus Rozvržení stránek a pak Zveřejnit. Změny se ukládají jen v tomhle prohlížeči, ostrý web se nezmění.'};
+  function fit(){var s=$('shot'),f=$('shotF');if(!s||!f)return;var mob=matchMedia('(max-width:700px)').matches;f.style.width=(mob?390:1280)+'px';f.style.height=(mob?620:820)+'px';f.style.transform='scale('+(s.clientWidth/(mob?390:1280))+')';}
+  $('shotF').src='/';fit();addEventListener('resize',fit);
+  var last=null;
+  function show(t){
+    $('vwF').src=SRC[t];$('vwHint').textContent=HINT[t];
+    [].forEach.call(document.querySelectorAll('#tabs [data-t]'),function(b){b.setAttribute('aria-pressed',b.dataset.t===t);});
+  }
+  var open=function(t){last=document.activeElement;$('vw').hidden=false;document.documentElement.style.overflow='hidden';show(t);$('vwX').focus();}
+  var close=function(){$('vw').hidden=true;$('vwF').src='about:blank';document.documentElement.style.overflow='';if(last)last.focus();}
+  $('shot').addEventListener('click',function(e){e.preventDefault();open('web');});
+  [].forEach.call(document.querySelectorAll('[data-open]'),function(b){b.onclick=function(){open(b.dataset.open);};});
+  $('tabs').addEventListener('click',function(e){var b=e.target.closest('[data-t]');if(b)show(b.dataset.t);});
+    addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('vw').hidden)close();});
+  addEventListener('message',function(e){if(e.data&&e.data.type==='lh-open-web'&&!$('vw').hidden)show('web');});
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* smooth scroll */
+  var lenis=null;
+  if(!reduce&&typeof Lenis!=='undefined'){lenis=new Lenis({lerp:.09,smoothWheel:true});(function raf(t){lenis.raf(t);requestAnimationFrame(raf);})(performance.now());}
+  var _open=open,_close=close;
+  open=function(t){if(lenis)lenis.stop();_open(t);};close=function(){_close();if(lenis)lenis.start();};
+  $('vwX').onclick=close;
+  /* FAQ: one open at a time, animated height */
+  var DUR=reduce?0:360,EASE='cubic-bezier(.2,.7,.15,1)';
+  function shut(d){var a=d.querySelector('.a');if(!DUR){d.open=false;return;}var an=a.animate([{height:a.offsetHeight+'px',opacity:1},{height:'0px',opacity:0}],{duration:DUR,easing:EASE});an.onfinish=function(){d.open=false;};d.classList.remove('on');}
+  [].forEach.call(document.querySelectorAll('#faq details'),function(d){
+    d.querySelector('summary').addEventListener('click',function(e){
+      e.preventDefault();
+      if(d.open&&d.classList.contains('on')){shut(d);return;}
+      [].forEach.call(document.querySelectorAll('#faq details[open]'),function(o){if(o!==d)shut(o);});
+      d.open=true;d.classList.add('on');var a=d.querySelector('.a');
+      if(DUR){var h=a.offsetHeight;a.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:DUR,easing:EASE});}
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
