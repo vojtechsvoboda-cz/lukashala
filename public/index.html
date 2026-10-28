@@ -81,8 +81,10 @@ body.viewing{overflow:hidden}
       return '<a class="u'+(c[0]===cur?' on':'')+'" href="#/'+(c[0]==='overview'?'':c[0])+'">'+c[1]+'</a>';
     }).join(', ')+', <a class="u'+(cur==='info'?' on':'')+'" href="#/info">Work with me</a>';
   }
-  function foot(){
+  function foot(cat){
     var i=site.info;
+    /* on the Work with me page the contact is already in the page itself, so the footer keeps only the credit */
+    if(cat==='info'){document.getElementById('foot').innerHTML='<a class="credit" href="https://vojtechsvoboda.cz" target="_blank" rel="noopener">Website by vojtechsvoboda.cz</a>';return;}
     document.getElementById('foot').innerHTML='<a class="u" href="mailto:'+i.email+'">'+i.email+'</a>, <a class="u" href="https://instagram.com/'+i.instagram+'" target="_blank" rel="noopener">Instagram</a><br><a class="credit" href="https://vojtechsvoboda.cz" target="_blank" rel="noopener">Website by vojtechsvoboda.cz</a>';
   }
   function grid(cat){
@@ -111,7 +113,7 @@ body.viewing{overflow:hidden}
   function hidePhoto(){var had=!!(ov&&ov.innerHTML);if(ov){ov.innerHTML='';}document.body.classList.remove('viewing');document.onkeydown=null;if(had)window.scrollTo(0,keepY);}
   function render(fade){
     var r=route(),page=r.cat;
-    nav(r.cat); foot();
+    nav(r.cat); foot(r.cat);
     if(r.photo){ if(last!==page){main.innerHTML=grid(page);last=page;} showPhoto(r); return; }
     var wasPhoto=!!(ov&&ov.innerHTML);hidePhoto();
     if(wasPhoto&&last===page)return;
