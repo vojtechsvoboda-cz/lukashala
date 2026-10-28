@@ -41,8 +41,9 @@ footer a{color:var(--fg)}
 .vw-x:hover{opacity:1}
 .vw-x svg{width:20px;height:20px}
 body.viewing{overflow:hidden}
-.credit{display:inline-block;margin-top:14px;color:var(--muted)!important;text-decoration:none}
-.credit:hover{color:var(--fg)!important}
+.credit{display:inline-block;margin-top:14px;color:var(--muted)}
+.credit a{color:var(--muted);text-decoration:none;transition:color .2s}
+.credit a:hover{color:var(--fg)}
 @media (prefers-reduced-motion: reduce){.vw,.vw img{animation:none}}
 /* info */
 .info{width:min(640px,calc(100vw - 40px));margin:0 auto;text-align:center}
@@ -84,8 +85,8 @@ body.viewing{overflow:hidden}
   function foot(cat){
     var i=site.info;
     /* on the Work with me page the contact is already in the page itself, so the footer keeps only the credit */
-    if(cat==='info'){document.getElementById('foot').innerHTML='<a class="credit" href="https://vojtechsvoboda.cz" target="_blank" rel="noopener">Website by vojtechsvoboda.cz</a>';return;}
-    document.getElementById('foot').innerHTML='<a class="u" href="mailto:'+i.email+'">'+i.email+'</a>, <a class="u" href="https://instagram.com/'+i.instagram+'" target="_blank" rel="noopener">Instagram</a><br><a class="credit" href="https://vojtechsvoboda.cz" target="_blank" rel="noopener">Website by vojtechsvoboda.cz</a>';
+    if(cat==='info'){document.getElementById('foot').innerHTML='<span class="credit">Website by <a href="https://vojtechsvoboda.cz" target="_blank" rel="noopener">vojtechsvoboda.cz</a></span>';return;}
+    document.getElementById('foot').innerHTML='<a class="u" href="mailto:'+i.email+'">'+i.email+'</a>, <a class="u" href="https://instagram.com/'+i.instagram+'" target="_blank" rel="noopener">Instagram</a><br><span class="credit">Website by <a href="https://vojtechsvoboda.cz" target="_blank" rel="noopener">vojtechsvoboda.cz</a></span>';
   }
   function grid(cat){
     if(cat!=='overview'&&!site.layouts[cat])LH.syncLayout(site,cat);
