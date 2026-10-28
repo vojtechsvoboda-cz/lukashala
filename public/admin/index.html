@@ -891,7 +891,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   function renderBoard(keepInspector){
     var b=$('board');if(!b)return;
     var cats=['overview'].concat(D.cats.map(function(c){return c[0];}));
-    b.innerHTML='<div class="bm"><p>Photographer based in the heart of Europe, working with brands in <u>Portrait</u>, <u>Fashion</u>, <u>Sport</u> and <u>Automotive</u>. <u>Work with me.</u></p><h1>Lukáš Hála</h1><em>Production Imaginis</em><nav>'+cats.map(function(k){return '<u class="'+(k===page?'on':'')+'">'+SITECAT[k]+'</u>';}).join(', ')+'</nav></div>'+
+    b.innerHTML='<div class="bm"><h1>Lukáš Hála</h1><em>Imaginis Production</em><nav>'+cats.map(function(k){return '<u class="'+(k===page?'on':'')+'">'+SITECAT[k]+'</u>';}).join(', ')+', <u>Work with me</u></nav></div>'+
       LH.rowsHtml(draft,rows(),{base:IMG,lazy:false});
     $$('.lh-row',b).forEach(function(r,ri){
       var a=rowA(rows()[ri]),t=document.createElement('div');t.className='rtool';
@@ -1060,7 +1060,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     $('title').textContent='Texty a kontakt';
     var i=draft.info;
     $('content').innerHTML='<div class="split"><div class="content" style="border-right:1px solid var(--line)"><div class="page">'+
-      '<p class="muted">Texty pro stránku Info („Work with me.“) a patičku webu.</p>'+
+      '<p class="muted">Texty pro stránku Info („Work with me“) a patičku webu.</p>'+
       '<div class="form2" style="margin-top:16px"><label class="field full"><span>O mně (anglicky)</span><textarea class="inp" id="t-bio" rows="5" data-i="bio">'+esc(i.bio)+'</textarea></label>'+
       '<label class="field"><span>E-mail</span><input class="inp" id="t-email" data-i="email" value="'+esc(i.email)+'"></label>'+
       '<label class="field"><span>Instagram</span><input class="inp" id="t-ig" data-i="instagram" value="'+esc(i.instagram)+'"></label></div>'+
