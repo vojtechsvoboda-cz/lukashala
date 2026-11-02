@@ -27,14 +27,14 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 a{color:inherit}
 :focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .col{max-width:880px;margin:0 auto}
-.mast{text-align:center;padding-block:56px 36px}
+.mast{text-align:center;padding-block:32px 28px}
 .tnav{display:inline-flex;gap:2px;background:var(--tint);border-radius:99px;padding:3px}
 .tnav button{height:32px;padding:0 14px;border-radius:99px;font-size:13.5px;font-weight:500;color:var(--ink-2);transition:color .2s,background .2s}
 .tnav button:hover{color:var(--ink)}
 .tnav button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .mast h1{font:400 clamp(40px,7vw,60px)/1.1 var(--serif);letter-spacing:-.01em;margin-top:18px}
 .mast em{display:block;font:italic 400 clamp(24px,4vw,32px)/1.2 var(--serif)}
-.mast p{max-width:48ch;margin:22px auto 0;color:var(--ink-2);text-wrap:balance}
+.mast p{max-width:48ch;margin:0 auto;color:var(--ink-2);text-wrap:balance}
 
 /* live site preview */
 .shot{position:relative;display:block;width:100%;aspect-ratio:1280/820;max-width:100%;border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:var(--paper);cursor:pointer}
@@ -111,14 +111,16 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
 
 @media (max-width:700px){
   .opts{grid-template-columns:1fr}
-  .mast{padding-block:40px 28px}
+  .mast{padding-block:24px 20px}
   section{padding-block:44px 0}
   .shot{aspect-ratio:390/620}
   .shot iframe{width:390px;height:620px}
 }
 /* font picker */
-.fp{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:28px 0 30px;border-bottom:1px solid var(--rule)}
-.fp h2{font-size:24px}
+.fp{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:44px 0 36px;border-bottom:1px solid var(--rule)}
+.fp .btn{margin-top:4px}
+.fp-spec b{display:block;font:400 clamp(40px,7vw,60px)/1.1 var(--serif);letter-spacing:-.01em}
+.fp-spec i{display:block;font:italic 400 clamp(24px,4vw,32px)/1.2 var(--serif)}
 .fp-txt{max-width:56ch;color:var(--ink-2);font-size:14px;text-wrap:balance}
 .fp-txt b{color:var(--ink);font-weight:500}
 .fp-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
@@ -149,16 +151,14 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
   <button class="x" type="button" id="vwX" hidden aria-label="Zpět na nabídku"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
 </header>
 <div class="col">
-  <section class="fp" id="fp" aria-labelledby="h-fp">
-    <h2 id="h-fp">Písmo</h2>
-    <p class="fp-txt">Reference používá placené písmo <b>Canela</b>. Na webu teď je <b>Instrument Serif</b>, nejbližší bezplatná varianta, ale není úplně stejná. Vyzkoušej i další podobná písma, změní se jméno i náhled webu pod tím. Můžeme použít i jakékoliv jiné, nebo dokoupit licenci Canely.</p>
+  <section class="fp" id="fp" aria-label="Písmo">
+    <div class="fp-spec" id="fpSpec"><b>Lukáš Hála</b><i>Imaginis Production</i></div>
     <div class="fp-row" id="fpRow"></div>
     <p class="fp-info" id="fpInfo"></p>
-    <button type="button" class="fp-all" id="fpAll">Porovnat všechna písma vedle sebe</button>
+    <p class="fp-txt">Reference používá placené písmo <b>Canela</b>. Na webu teď je <b>Instrument Serif</b>, nejbližší bezplatná varianta, ale není úplně stejná. Tady jsou další podobná písma, klidně můžeme použít i úplně jiné.</p>
+    <button type="button" class="btn" id="fpAll">Porovnat všechna písma vedle sebe</button>
   </section>
   <header class="mast">
-    <h1>Lukáš Hála</h1>
-    <em>Imaginis Production</em>
     <p>Takhle by vypadal tvůj web. Projdi si ho v klidu a vyber, která ze dvou možností ti sedí víc.</p>
   </header>
 
@@ -260,14 +260,11 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
     var f=F();$('fpInfo').textContent=f.name+' · '+f.info;
     [].forEach.call(document.querySelectorAll('#fpRow button'),function(b){b.setAttribute('aria-pressed',b.dataset.f===cur);});
     var own=document.getElementById('fpOwn');if(!own){own=document.createElement('style');own.id='fpOwn';document.head.appendChild(own);}
-    own.textContent='.mast h1,.mast em{font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w+'}';
-    toFrame($('shotF'));toFrame($('vwF'));
+    own.textContent='.fp-spec b,.fp-spec i{font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w+'}';
     var m=document.getElementById('fpm');if(m)[].forEach.call(m.querySelectorAll('.fpm-c'),function(c){c.classList.toggle('on',c.dataset.f===cur);});
   }
   $('fpRow').innerHTML=FONTS.map(function(f){return '<button type="button" data-f="'+f.id+'" style="font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w+'">'+f.name+'</button>';}).join('');
   $('fpRow').addEventListener('click',function(e){var b=e.target.closest('[data-f]');if(!b)return;cur=b.dataset.f;try{localStorage.setItem('lh-font',cur);}catch(x){}applyFont();});
-  $('shotF').addEventListener('load',function(){toFrame($('shotF'));});
-  $('vwF').addEventListener('load',function(){toFrame($('vwF'));});
   $('fpAll').onclick=function(){
     var m=document.createElement('div');m.className='fpm';m.id='fpm';
     m.innerHTML='<div class="fpm-d" role="dialog" aria-modal="true" aria-label="Porovnání písem"><h3>Písma vedle sebe</h3><button class="x" type="button" aria-label="Zavřít"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l10 10M12 2L2 12"/></svg></button><div class="fpm-g">'+
