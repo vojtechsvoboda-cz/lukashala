@@ -9,7 +9,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <style>
 /* Layout: one quiet column like his portfolio — serif masthead, the live site as the hero, two plain options, a short price list, questions on demand.
@@ -116,6 +116,26 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
   .shot{aspect-ratio:390/620}
   .shot iframe{width:390px;height:620px}
 }
+/* font picker */
+.fp{display:flex;flex-direction:column;align-items:center;gap:10px;margin:-6px 0 22px}
+.fp-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.fp-row button{height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--rule);font-size:17px;color:var(--ink-2);background:var(--paper);transition:border-color .2s,color .2s}
+.fp-row button:hover{color:var(--ink);border-color:#cfccc6}
+.fp-row button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink)}
+.fp-info{font-size:12.5px;color:var(--ink-3);text-align:center}
+.fp-all{font-size:13px;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px}
+.fp-all:hover{color:var(--ink)}
+.fpm{position:fixed;inset:0;z-index:80;background:rgba(13,13,13,.32);display:grid;place-items:center;padding:20px}
+.fpm-d{background:var(--paper);border-radius:16px;width:min(880px,100%);max-height:calc(100vh - 40px);overflow:auto;padding:24px;position:relative;box-shadow:0 30px 80px -30px rgba(0,0,0,.45)}
+.fpm-d h3{font:400 26px/1.2 var(--serif)}
+.fpm-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.fpm-c{border:1px solid var(--rule);border-radius:12px;padding:22px 18px;text-align:center;cursor:pointer;transition:border-color .2s}
+.fpm-c:hover{border-color:#cfccc6}.fpm-c.on{border-color:var(--ink)}
+.fpm-c b{display:block;font-weight:400;font-size:34px;line-height:1.15}
+.fpm-c i{display:block;font-size:22px;line-height:1.3}
+.fpm-c small{display:block;margin-top:12px;font:400 12.5px/1.4 var(--sans);color:var(--ink-3)}
+.fpm .x{position:absolute;top:14px;right:14px}
+@media (max-width:640px){.fpm-g{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.rv.pre{opacity:1;transform:none}}
 </style>
 
@@ -132,6 +152,11 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
     <p>Takhle by vypadal tvůj web. Projdi si ho v klidu a vyber, která ze dvou možností ti sedí víc.</p>
   </header>
 
+  <div class="fp" id="fp">
+    <div class="fp-row" id="fpRow"></div>
+    <p class="fp-info" id="fpInfo"></p>
+    <button type="button" class="fp-all" id="fpAll">Porovnat všechna písma vedle sebe</button>
+  </div>
   <a class="shot" id="shot" href="#web" aria-label="Prohlédnout web"><iframe id="shotF" title="Náhled webu" tabindex="-1" loading="lazy"></iframe><span class="go">Prohlédnout web</span></a>
 
   <section aria-labelledby="h-opts">
@@ -211,6 +236,43 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
   [].forEach.call(document.querySelectorAll('[data-open]'),function(b){b.onclick=function(){open(b.dataset.open);};});
   $('tabs').addEventListener('click',function(e){var b=e.target.closest('[data-t]');if(!b)return;if(b.dataset.t==='offer'){if(!$('vw').hidden)close();}else if($('vw').hidden)open(b.dataset.t);else show(b.dataset.t);});
     addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('vw').hidden)close();});
+
+  /* font picker: switches the masthead here and inside both previews of the site */
+  var FONTS=[
+    {id:'instrument',name:'Instrument Serif',fam:"'Instrument Serif'",w:400,info:'Regular 400 + Italic 400 · aktuální, nejblíž referenci'},
+    {id:'cormorant',name:'Cormorant',fam:"'Cormorant Garamond'",w:500,info:'Medium 500 + Medium Italic 500 · jemný, elegantní'},
+    {id:'fraunces',name:'Fraunces',fam:"'Fraunces'",w:400,info:'Regular 400 + Italic 400 · modernější, výraznější'},
+    {id:'newsreader',name:'Newsreader',fam:"'Newsreader'",w:400,info:'Regular 400 + Italic 400 · klidný, časopisový'}
+  ];
+  var FLINK=document.querySelector('link[href*="Cormorant"]').href,cur='instrument';
+  try{cur=localStorage.getItem('lh-font')||'instrument';}catch(e){}
+  function F(){for(var i=0;i<FONTS.length;i++)if(FONTS[i].id===cur)return FONTS[i];return FONTS[0];}
+  function css(f){return ':root{--serif:'+f.fam+',Georgia,serif}.mast h1,.mast em{font-family:'+f.fam+',Georgia,serif!important;font-weight:'+f.w+'!important}';}
+  function toFrame(fr){try{var d=fr.contentDocument;if(!d||!d.head)return;
+    if(!d.getElementById('fpLink')){var l=d.createElement('link');l.id='fpLink';l.rel='stylesheet';l.href=FLINK;d.head.appendChild(l);}
+    var st=d.getElementById('fpCss');if(!st){st=d.createElement('style');st.id='fpCss';d.head.appendChild(st);}st.textContent=css(F());}catch(e){}}
+  function applyFont(){
+    var f=F();$('fpInfo').textContent=f.name+' · '+f.info;
+    [].forEach.call(document.querySelectorAll('#fpRow button'),function(b){b.setAttribute('aria-pressed',b.dataset.f===cur);});
+    var own=document.getElementById('fpOwn');if(!own){own=document.createElement('style');own.id='fpOwn';document.head.appendChild(own);}
+    own.textContent='.mast h1,.mast em{font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w+'}';
+    toFrame($('shotF'));toFrame($('vwF'));
+    var m=document.getElementById('fpm');if(m)[].forEach.call(m.querySelectorAll('.fpm-c'),function(c){c.classList.toggle('on',c.dataset.f===cur);});
+  }
+  $('fpRow').innerHTML=FONTS.map(function(f){return '<button type="button" data-f="'+f.id+'" style="font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w+'">'+f.name+'</button>';}).join('');
+  $('fpRow').addEventListener('click',function(e){var b=e.target.closest('[data-f]');if(!b)return;cur=b.dataset.f;try{localStorage.setItem('lh-font',cur);}catch(x){}applyFont();});
+  $('shotF').addEventListener('load',function(){toFrame($('shotF'));});
+  $('vwF').addEventListener('load',function(){toFrame($('vwF'));});
+  $('fpAll').onclick=function(){
+    var m=document.createElement('div');m.className='fpm';m.id='fpm';
+    m.innerHTML='<div class="fpm-d" role="dialog" aria-modal="true" aria-label="Porovnání písem"><h3>Písma vedle sebe</h3><button class="x" type="button" aria-label="Zavřít"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l10 10M12 2L2 12"/></svg></button><div class="fpm-g">'+
+      FONTS.map(function(f){var st='font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w;return '<div class="fpm-c" data-f="'+f.id+'" role="button" tabindex="0"><b style="'+st+'">Lukáš Hála</b><i style="'+st+';font-style:italic">Imaginis Production</i><small>'+f.name+'<br>'+f.info+'</small></div>';}).join('')+'</div></div>';
+    document.body.appendChild(m);applyFont();
+    var shut=function(){m.remove();document.removeEventListener('keydown',esc);};
+    var esc=function(e){if(e.key==='Escape')shut();};document.addEventListener('keydown',esc);
+    m.addEventListener('click',function(e){var c=e.target.closest('.fpm-c');if(c){cur=c.dataset.f;try{localStorage.setItem('lh-font',cur);}catch(x){}applyFont();return;}if(e.target===m||e.target.closest('.x'))shut();});
+  };
+  applyFont();
   addEventListener('message',function(e){if(e.data&&e.data.type==='lh-open-web'&&!$('vw').hidden)show('web');});
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   /* smooth scroll */
