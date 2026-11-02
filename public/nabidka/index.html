@@ -117,7 +117,10 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
   .shot iframe{width:390px;height:620px}
 }
 /* font picker */
-.fp{display:flex;flex-direction:column;align-items:center;gap:10px;margin:-6px 0 22px}
+.fp{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:28px 0 30px;border-bottom:1px solid var(--rule)}
+.fp h2{font-size:24px}
+.fp-txt{max-width:56ch;color:var(--ink-2);font-size:14px;text-wrap:balance}
+.fp-txt b{color:var(--ink);font-weight:500}
 .fp-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
 .fp-row button{height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--rule);font-size:17px;color:var(--ink-2);background:var(--paper);transition:border-color .2s,color .2s}
 .fp-row button:hover{color:var(--ink);border-color:#cfccc6}
@@ -146,17 +149,19 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
   <button class="x" type="button" id="vwX" hidden aria-label="Zpět na nabídku"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
 </header>
 <div class="col">
+  <section class="fp" id="fp" aria-labelledby="h-fp">
+    <h2 id="h-fp">Písmo</h2>
+    <p class="fp-txt">Reference používá placené písmo <b>Canela</b>. Na webu teď je <b>Instrument Serif</b>, nejbližší bezplatná varianta, ale není úplně stejná. Vyzkoušej i další podobná písma, změní se jméno i náhled webu pod tím. Můžeme použít i jakékoliv jiné, nebo dokoupit licenci Canely.</p>
+    <div class="fp-row" id="fpRow"></div>
+    <p class="fp-info" id="fpInfo"></p>
+    <button type="button" class="fp-all" id="fpAll">Porovnat všechna písma vedle sebe</button>
+  </section>
   <header class="mast">
     <h1>Lukáš Hála</h1>
     <em>Imaginis Production</em>
     <p>Takhle by vypadal tvůj web. Projdi si ho v klidu a vyber, která ze dvou možností ti sedí víc.</p>
   </header>
 
-  <div class="fp" id="fp">
-    <div class="fp-row" id="fpRow"></div>
-    <p class="fp-info" id="fpInfo"></p>
-    <button type="button" class="fp-all" id="fpAll">Porovnat všechna písma vedle sebe</button>
-  </div>
   <a class="shot" id="shot" href="#web" aria-label="Prohlédnout web"><iframe id="shotF" title="Náhled webu" tabindex="-1" loading="lazy"></iframe><span class="go">Prohlédnout web</span></a>
 
   <section aria-labelledby="h-opts">
