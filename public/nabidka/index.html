@@ -259,8 +259,8 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding-block:64px 48
   function applyFont(){
     var f=F();$('fpInfo').textContent=f.name+' · '+f.info;
     [].forEach.call(document.querySelectorAll('#fpRow button'),function(b){b.setAttribute('aria-pressed',b.dataset.f===cur);});
-    var own=document.getElementById('fpOwn');if(!own){own=document.createElement('style');own.id='fpOwn';document.head.appendChild(own);}
-    own.textContent='.fp-spec b,.fp-spec i{font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w+'}';
+    /* inline styles, so nothing later in the cascade can override the choice */
+    [].forEach.call(document.querySelectorAll('#fpSpec b,#fpSpec i'),function(el){el.style.fontFamily=f.fam+',Georgia,serif';el.style.fontWeight=f.w;});
     var m=document.getElementById('fpm');if(m)[].forEach.call(m.querySelectorAll('.fpm-c'),function(c){c.classList.toggle('on',c.dataset.f===cur);});
   }
   $('fpRow').innerHTML=FONTS.map(function(f){return '<button type="button" data-f="'+f.id+'" style="font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w+'">'+f.name+'</button>';}).join('');
