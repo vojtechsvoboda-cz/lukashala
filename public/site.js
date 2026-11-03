@@ -79,7 +79,21 @@
     {id:'newsreader',name:'Newsreader',fam:"'Newsreader'",w:400,info:'Regular 400 + Italic 400 · klidný, časopisový'}
   ];
   function font(site){var id=site&&site.font;for(var i=0;i<FONTS.length;i++)if(FONTS[i].id===id)return FONTS[i];return FONTS[0];}
-  function fontCss(site,sel){var f=font(site);return (sel||'.mast h1,.mast em')+'{font-family:'+f.fam+',Georgia,serif!important;font-weight:'+f.w+'!important}';}
-  window.LH={FONTS:FONTS,font:font,fontCss:fontCss,D:D,SZ:SZ,GAP:GAP,SIZES:SIZES,MINW:MINW,MAXW:MAXW,clone:clone,dim:dim,src:src,portrait:portrait,width:width,mobileWidth:mobileWidth,stepOf:stepOf,
+  /* on the website the chosen face replaces --serif everywhere (name, Info text); in the admin only the given selector */
+  function fontCss(site,sel){var f=font(site);
+    if(sel)return sel+'{font-family:'+f.fam+',Georgia,serif!important;font-weight:'+f.w+'!important}';
+    return ':root{--serif:'+f.fam+',Georgia,serif}.mast h1,.mast em,.info p.bio{font-weight:'+f.w+'!important}';}
+  /* clean up content saved before later changes: old e-mail, swapped company name, photos that were removed */
+  function fixLegacy(site){
+    if(!site||!site.info)return site;
+    if(site.info.email==='hello@lukashala.cz')site.info.email=D.info.email;
+    var sw=function(t){return typeof t==='string'?t.replace(/Production Imaginis/g,'Imaginis Production'):t;};
+    site.info.bio=sw(site.info.bio);
+    var ok=function(id){return !!(D.photos[id]||(site.extra&&site.extra[id]));};
+    (site.projects||[]).forEach(function(p){p.desc=sw(p.desc);p.photos=(p.photos||[]).filter(ok);});
+    var L=site.layouts||{};Object.keys(L).forEach(function(k){L[k]=(L[k]||[]).map(function(r){r.items=r.items.filter(function(it){return ok(it.id);});return r;}).filter(function(r){return r.items.length;});});
+    return site;
+  }
+  window.LH={FONTS:FONTS,font:font,fontCss:fontCss,fixLegacy:fixLegacy,D:D,SZ:SZ,GAP:GAP,SIZES:SIZES,MINW:MINW,MAXW:MAXW,clone:clone,dim:dim,src:src,portrait:portrait,width:width,mobileWidth:mobileWidth,stepOf:stepOf,
     projectOf:projectOf,catPhotos:catPhotos,packRows:packRows,defaultSite:defaultSite,syncLayout:syncLayout,rowWidth:rowWidth,rowsHtml:rowsHtml,CSS:CSS};
 })();

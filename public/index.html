@@ -85,6 +85,7 @@ body.viewing{overflow:hidden}
   }
   function foot(cat){
     var i=site.info;
+    if(PREVIEW){document.getElementById('foot').innerHTML='';return;}
     /* on the Work with me page the contact is already in the page itself, so the footer keeps only the credit */
     if(cat==='info'){document.getElementById('foot').innerHTML='<span class="credit">Website by <a href="https://vojtechsvoboda.cz" target="_blank" rel="noopener">vojtechsvoboda.cz</a></span>';return;}
     document.getElementById('foot').innerHTML='<a class="u" href="mailto:'+i.email+'">'+i.email+'</a>, <a class="u" href="https://instagram.com/'+i.instagram+'" target="_blank" rel="noopener">Instagram</a><br><span class="credit">Website by <a href="https://vojtechsvoboda.cz" target="_blank" rel="noopener">vojtechsvoboda.cz</a></span>';
@@ -137,7 +138,7 @@ body.viewing{overflow:hidden}
   else{
     var done=false,first=function(){if(!done){done=true;render(false);}};
     setTimeout(first,1500);
-    fetch('/api/site',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(s){if(s&&s.v===1)site=s;else{try{var l=JSON.parse(localStorage.getItem('lh-pub')||'null');if(l&&l.v===1)site=l;}catch(e){}}}).catch(function(){}).then(function(){if(done){last=null;render(false);}else first();});
+    fetch('/api/site',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(s){if(s&&s.v===1)site=LH.fixLegacy(s);else{try{var l=JSON.parse(localStorage.getItem('lh-pub')||'null');if(l&&l.v===1)site=l;}catch(e){}}}).catch(function(){}).then(function(){if(done){last=null;render(false);}else first();});
   }
 })();
 </script>
