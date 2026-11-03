@@ -60,7 +60,7 @@ body.viewing{overflow:hidden}
 <style id="lhfont"></style>
 </head>
 <body>
-<header class="mast"><h1><a href="#/">Lukáš Hála</a></h1><em>Imaginis Production</em></header>
+<header class="mast"><h1><a href="/">Lukáš Hála</a></h1><em>Imaginis Production</em></header>
 <nav class="cats" id="cats"></nav>
 <main id="main"></main>
 <footer id="foot"></footer>
@@ -76,12 +76,14 @@ body.viewing{overflow:hidden}
     return LH.defaultSite();
   }
   function catName(c){if(c==='overview')return 'Overview';for(var i=0;i<D.cats.length;i++)if(D.cats[i][0]===c)return D.cats[i][1];return c;}
-  function route(){var h=(location.hash||'#/').slice(2).split('/');return {cat:h[0]||'overview',photo:h[1]||null};}
+  function path(){return PREVIEW?(location.hash||'#/').slice(2):location.pathname.slice(1).replace(/\/$/,'');}
+  function go(u){if(PREVIEW)location.hash='#'+u;else{history.pushState(null,'',u);render(true);}}
+  function route(){var h=path().split('/');return {cat:h[0]||'overview',photo:h[1]||null};}
   function seq(cat){var a=[];(site.layouts[cat]||[]).forEach(function(r){r.items.forEach(function(it){a.push(it.id);});});return a;}
   function nav(cur){
     document.getElementById('cats').innerHTML=[['overview','Overview']].concat(D.cats).map(function(c){
-      return '<a class="u'+(c[0]===cur?' on':'')+'" href="#/'+(c[0]==='overview'?'':c[0])+'">'+c[1]+'</a>';
-    }).join(', ')+', <a class="u'+(cur==='info'?' on':'')+'" href="#/info">Work with me</a>';
+      return '<a class="u'+(c[0]===cur?' on':'')+'" href="/'+(c[0]==='overview'?'':c[0])+'">'+c[1]+'</a>';
+    }).join(', ')+', <a class="u'+(cur==='info'?' on':'')+'" href="/info">Work with me</a>';
   }
   function foot(cat){
     var i=site.info;
@@ -92,11 +94,11 @@ body.viewing{overflow:hidden}
   }
   function grid(cat){
     if(cat!=='overview'&&!site.layouts[cat])LH.syncLayout(site,cat);
-    return LH.rowsHtml(site,site.layouts[cat]||[],{base:BASE,lazy:!PREVIEW,href:function(it){return '#/'+cat+'/'+it.id;}});
+    return LH.rowsHtml(site,site.layouts[cat]||[],{base:BASE,lazy:!PREVIEW,href:function(it){return '/'+cat+'/'+it.id;}});
   }
   function viewer(cat,id){
     var p=LH.projectOf(site,id),alt=p?(p.title+' — '+p.client):'';
-    return '<section class="vw" id="stage"><img src="'+LH.src(site,id,BASE)+'" alt="'+alt.replace(/"/g,'')+'"><a class="vw-x" href="#/'+(cat==='overview'?'':cat)+'" aria-label="Close"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 3l14 14M17 3L3 17"/></svg></a></section>';
+    return '<section class="vw" id="stage"><img src="'+LH.src(site,id,BASE)+'" alt="'+alt.replace(/"/g,'')+'"><a class="vw-x" href="/'+(cat==='overview'?'':cat)+'" aria-label="Close"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 3l14 14M17 3L3 17"/></svg></a></section>';
   }
   function info(){
     var i=site.info;
@@ -109,9 +111,9 @@ body.viewing{overflow:hidden}
     if(!ov){ov=document.createElement('div');document.body.appendChild(ov);}
     if(!ov.innerHTML)keepY=window.scrollY;
     ov.innerHTML=viewer(r.cat,r.photo);document.body.classList.add('viewing');
-    var back='#/'+(r.cat==='overview'?'':r.cat);
-    ov.firstChild.onclick=function(e){e.preventDefault();location.hash=back;};
-    document.onkeydown=function(e){if(e.key==='Escape')location.hash=back;};
+    var back='/'+(r.cat==='overview'?'':r.cat);
+    ov.firstChild.onclick=function(e){e.preventDefault();go(back);};
+    document.onkeydown=function(e){if(e.key==='Escape')go(back);};
   }
   function hidePhoto(){var had=!!(ov&&ov.innerHTML);if(ov){ov.innerHTML='';}document.body.classList.remove('viewing');document.onkeydown=null;if(had)window.scrollTo(0,keepY);}
   function render(fade){
@@ -126,6 +128,16 @@ body.viewing{overflow:hidden}
     if(fade&&!reduce&&!PREVIEW&&last!==page){main.classList.add('out');setTimeout(go,260);}else go();
   }
   addEventListener('hashchange',function(){render(true);});
+  addEventListener('popstate',function(){render(true);});
+  /* clean URLs (/portrait, /info): internal links switch the page without reloading */
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[href^="/"]');
+    if(!a||a.target||e.metaKey||e.ctrlKey||e.shiftKey||e.button)return;
+    if(/^\/(admin|api|img|u)\b/.test(a.getAttribute('href')))return;
+    e.preventDefault();var u=a.getAttribute('href');if(u!==(PREVIEW?'/'+path():location.pathname))go(u);
+  });
+  /* old links with #/ keep working */
+  if(!PREVIEW&&/^#\//.test(location.hash))history.replaceState(null,'',location.hash.slice(1));
   /* published content from the server; the built-in default shows until it arrives (or if nothing is published yet) */
   /* live preview from the admin: it posts the whole draft site plus which page to show */
   addEventListener('message',function(e){

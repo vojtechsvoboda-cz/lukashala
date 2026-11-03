@@ -522,11 +522,15 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   /* ---------- shell ---------- */
   function navHtml(cur){
     var n=[['prehled','Přehled',IC.home],['projekty','Projekty',IC.folder,draft.projects.length],['rozvrzeni','Rozvržení stránek',IC.grid],['texty','Texty a písmo',IC.text],['historie','Historie',IC.clock]];
-    $('nav').innerHTML=n.map(function(x){return '<a href="#/'+x[0]+'" class="'+(cur===x[0]?'on':'')+'">'+x[2]+x[1]+(x[3]?'<span class="n">'+x[3]+'</span>':'')+'</a>';}).join('');
+    $('nav').innerHTML=n.map(function(x){return '<a href="/admin/'+x[0]+'" class="'+(cur===x[0]?'on':'')+'">'+x[2]+x[1]+(x[3]?'<span class="n">'+x[3]+'</span>':'')+'</a>';}).join('');
   }
+  function apath(){return location.pathname.replace(/^\/admin\/?/,'').replace(/\/$/,'');}
+  function go(u){if(u!==location.pathname)history.pushState(null,'',u);route();}
+  /* old links with #/ keep working */
+  if(/^#\//.test(location.hash))history.replaceState(null,'','/admin/'+location.hash.slice(2));
   function route(){
     $$('.ov').forEach(function(o){o.remove();});
-    var h=(location.hash||'#/prehled').slice(2).split('/'),p=h[0]||'prehled';
+    var h=apath().split('/'),p=h[0]||'prehled';
     navHtml({projekt:'projekty'}[p]||p);
     $('content').scrollTop=0;frames=[];sel=null;
     if(p==='projekty')pgProjects();
@@ -536,7 +540,13 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     else if(p==='historie')pgHistory();
     else pgHome();
   }
-  addEventListener('hashchange',function(){if(!$('app').hidden)route();});
+  addEventListener('popstate',function(){if(!$('app').hidden)route();});
+  /* clean URLs (/admin/projekty): internal links switch the page without reloading */
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[href^="/admin/"]');
+    if(!a||a.target||e.metaKey||e.ctrlKey||e.shiftKey||e.button)return;
+    e.preventDefault();go(a.getAttribute('href'));
+  });
 
   function applyFont(){var st=$('lhfont');if(st)st.textContent=LH.fontCss(draft,'.board .bm h1,.board .bm em');}
   /* ---------- přehled ---------- */
@@ -549,13 +559,13 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       '<div class="stats"><div class="card stat"><span class="muted">Projekty</span><b>'+draft.projects.length+'</b></div><div class="card stat"><span class="muted">Fotky</span><b>'+n+'</b></div><div class="card stat"><span class="muted">Poslední zveřejnění</span><b style="font-size:18px;margin-top:8px">'+esc(hist[0]?fmtT(hist[0].t):'zatím nic')+'</b></div></div>'+
       '<h3>Co chceš udělat?</h3><div class="go">'+
         card('button','type="button" id="qNew"',IC.plus,'Nový projekt','Založ projekt, vyber klienta a nahraj fotky.','pri')+
-        card('a','href="#/rozvrzeni/overview"',IC.home,'Upravit Overview','Vyber fotky na úvodní stránku a poskládej je.')+
-        card('a','href="#/rozvrzeni/'+D.cats[0][0]+'"',IC.grid,'Rozvržení kategorií','Velikost a pořadí fotek na stránkách Portrait, Fashion, Sport a Automotive.')+
-        card('a','href="#/texty"',IC.text,'Texty a písmo','Text o tobě, klienti, kontakt a písmo jména.')+
+        card('a','href="/admin/rozvrzeni/overview"',IC.home,'Upravit Overview','Vyber fotky na úvodní stránku a poskládej je.')+
+        card('a','href="/admin/rozvrzeni/'+D.cats[0][0]+'"',IC.grid,'Rozvržení kategorií','Velikost a pořadí fotek na stránkách Portrait, Fashion, Sport a Automotive.')+
+        card('a','href="/admin/texty"',IC.text,'Texty a písmo','Text o tobě, klienti, kontakt a písmo jména.')+
       '</div>'+
       (dirty()?'<div class="card" style="margin-top:12px;padding:16px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="flex:1;min-width:200px"><b>Máš nezveřejněné změny.</b> <span class="muted">Na webu se objeví až po zveřejnění.</span></span><button class="btn pri" type="button" data-pub>Zveřejnit</button></div>':'')+
 '<button type="button" class="infob" id="infoB" aria-label="Informace">i</button><div class="infop" id="infoP" hidden>'+
-        '<b>Jak to tady funguje</b><p>Úpravy se ukládají jako koncept a na webu se objeví až po kliknutí na Zveřejnit. Dvě předchozí verze najdeš v <a href="#/historie">Historii</a>, kde je můžeš vrátit nebo smazat.</p>'+
+        '<b>Jak to tady funguje</b><p>Úpravy se ukládají jako koncept a na webu se objeví až po kliknutí na Zveřejnit. Dvě předchozí verze najdeš v <a href="/admin/historie">Historii</a>, kde je můžeš vrátit nebo smazat.</p>'+
         '<b>Provoz webu <span class="chip">1 200 Kč / rok</span></b><p>V ceně je hosting, zálohy a zabezpečení. Doména se platí zvlášť. '+(NEXT_INVOICE?'Další rok provozu se fakturuje '+esc(NEXT_INVOICE)+'.':'Fakturuje se jednou ročně, vždy rok od spuštění webu.')+'</p>'+
         '<b>Potřebuješ pomoct?</b><p>Napiš Vojtovi na Instagram <a href="https://instagram.com/vojtechsvoboda.cz" target="_blank" rel="noopener">@vojtechsvoboda.cz</a>, rád pomůže.</p></div></div>';
     $('qNew').onclick=newProject;
@@ -579,8 +589,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         if(F&&p.cat!==pFilter)return '';
         var peek=p.photos.slice(0,6).map(function(ph){return '<img src="'+th(ph)+'" alt="" loading="lazy">';}).join('')+(p.photos.length>6?'<em>+'+(p.photos.length-6)+'</em>':'');
         return '<div class="prow" data-i="'+i+'"><span class="hd" draggable="true" title="Přetáhni pro změnu pořadí" aria-label="Přetáhnout">'+IC.grip+'</span>'+
-          '<a class="pic" href="#/projekt/'+p.id+'">'+(p.photos[0]?'<img src="'+th(p.photos[0])+'" alt="">':'')+'<i>'+fotek(p.photos.length)+'</i></a>'+
-          '<a class="tt" href="#/projekt/'+p.id+'"><b>'+esc(p.title||'Bez názvu')+'</b><span>'+(p.year||'')+'</span></a>'+
+          '<a class="pic" href="/admin/projekt/'+p.id+'">'+(p.photos[0]?'<img src="'+th(p.photos[0])+'" alt="">':'')+'<i>'+fotek(p.photos.length)+'</i></a>'+
+          '<a class="tt" href="/admin/projekt/'+p.id+'"><b>'+esc(p.title||'Bez názvu')+'</b><span>'+(p.year||'')+'</span></a>'+
           '<span class="combo"><input class="inp" data-cl="'+i+'" value="'+esc(p.client)+'" placeholder="Klient" aria-label="Klient" autocomplete="off"></span>'+
           '<select class="inp" data-ct="'+i+'" aria-label="Kategorie">'+catOptions(p.cat)+'</select>'+
           '<span class="mvs"><button type="button" class="ib" data-mv="'+i+'" data-d="-1" '+(i?'':'disabled')+' aria-label="Posunout výš" style="height:18px">'+IC.up+'</button><button type="button" class="ib" data-mv="'+i+'" data-d="1" '+(i<N-1?'':'disabled')+' aria-label="Posunout níž" style="height:18px">'+IC.down+'</button></span>'+
@@ -640,7 +650,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   function newProject(){
     var id='p'+Date.now().toString(36);
     draft.projects.unshift({id:id,title:'Nový projekt',client:'',cat:'sport',year:new Date().getFullYear(),place:'',desc:'',photos:[]});
-    note('new:'+id,'Nový projekt');save();location.hash='#/projekt/'+id;
+    note('new:'+id,'Nový projekt');save();go('/admin/projekt/'+id);
     setTimeout(function(){var t=$('f-title');if(t){t.focus();t.select();}},60);
   }
   function delProject(p,then){
@@ -653,8 +663,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     draft.layouts.overview=draft.layouts.overview.filter(function(r){return r.items.length;});
   }
   function pgProject(id){
-    var p=proj(id);if(!p){location.hash='#/projekty';return;}
-    var setTitle=function(){$('title').innerHTML='<a href="#/projekty">Projekty</a> / '+esc(p.title||'Bez názvu');};setTitle();
+    var p=proj(id);if(!p){go('/admin/projekty');return;}
+    var setTitle=function(){$('title').innerHTML='<a href="/admin/projekty">Projekty</a> / '+esc(p.title||'Bez názvu');};setTitle();
     var opt=catOptions(p.cat);
     $('content').innerHTML='<div class="page">'+
       '<div class="form2"><label class="field"><span>Název projektu</span><input class="inp" id="f-title" data-f="title" value="'+esc(p.title)+'"></label>'+
@@ -665,7 +675,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       '<h3>Fotky <span class="dim" style="text-transform:none;letter-spacing:0;font-weight:500">· '+p.photos.length+' · přetažením změníš pořadí</span></h3>'+
       '<div class="thumbs" id="thumbs">'+p.photos.map(function(ph,i){return '<div class="th" draggable="true" data-i="'+i+'"><img src="'+th(ph)+'" alt=""><span class="no">'+(i+1)+'</span><button type="button" class="x" data-del="'+i+'" aria-label="Odebrat fotku">'+IC.x+'</button></div>';}).join('')+
       '<button type="button" class="th add" id="addPh">'+IC.plus+'<span>Nahrát fotky</span></button></div>'+
-      '<div style="display:flex;justify-content:space-between;gap:10px;margin-top:28px;flex-wrap:wrap"><a class="btn" href="#/rozvrzeni/'+p.cat+'">'+IC.grid+'Rozvržení stránky '+CAT[p.cat]+'</a><button class="btn danger" type="button" id="pDel">'+IC.trash+'Smazat projekt</button></div></div>';
+      '<div style="display:flex;justify-content:space-between;gap:10px;margin-top:28px;flex-wrap:wrap"><a class="btn" href="/admin/rozvrzeni/'+p.cat+'">'+IC.grid+'Rozvržení stránky '+CAT[p.cat]+'</a><button class="btn danger" type="button" id="pDel">'+IC.trash+'Smazat projekt</button></div></div>';
     $$('[data-f]').forEach(function(inp){inp.addEventListener('input',function(){
       var f=inp.dataset.f;
       if(f==='cat'){setCat(p,inp.value);save();return;}
@@ -676,7 +686,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     });});
     combo($('f-client'),function(v){if(v===p.client)return;p.client=v;note('p:'+p.id,'Úprava projektu „'+p.title+'“');save();},true,p);
     $('addPh').onclick=function(){openUpload(p);};
-    $('pDel').onclick=function(){delProject(p,function(){location.hash='#/projekty';});};
+    $('pDel').onclick=function(){delProject(p,function(){go('/admin/projekty');});};
     $$('[data-del]').forEach(function(b){b.onclick=function(e){e.stopPropagation();var ph=p.photos.splice(+b.dataset.del,1)[0];
       LH.syncLayout(draft,p.cat);dropFromOverview([ph]);note('p:'+p.id,'Úprava projektu „'+p.title+'“');save();pgProject(p.id);};});
     var from=null;
@@ -734,9 +744,9 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       if(++done<items.length)return;
       LH.syncLayout(draft,p.cat);doGuide('project');
       note('up:'+p.id,'Projekt „'+p.title+'“: '+p.photos.length+' fotek');save();
-      acts.innerHTML='<a class="btn" href="#/rozvrzeni/'+p.cat+'">'+IC.grid+'Upravit rozvržení</a><button class="btn pri" type="button" data-close>Hotovo</button>';
-      m._onclose=function(){if(/#\/projekt\//.test(location.hash))pgProject(p.id);};
-      toast('Fotky jsou na konci stránky '+CAT[p.cat]+'. <a href="#/rozvrzeni/'+p.cat+'">Upravit rozvržení</a>',5000);
+      acts.innerHTML='<a class="btn" href="/admin/rozvrzeni/'+p.cat+'">'+IC.grid+'Upravit rozvržení</a><button class="btn pri" type="button" data-close>Hotovo</button>';
+      m._onclose=function(){if(/^projekt\//.test(apath()))pgProject(p.id);};
+      toast('Fotky jsou na konci stránky '+CAT[p.cat]+'. <a href="/admin/rozvrzeni/'+p.cat+'">Upravit rozvržení</a>',5000);
     };
     next(0);
   }
@@ -763,7 +773,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   function changed(){setTimeout(undoState,0);note('layout:'+page,'Rozvržení stránky '+CAT[page]);doGuide('layout');guide.lastCat=page;LS.set(P+'guide',guide);save();}
   function doUndo(){if(!undo.length)return;redo.push(JSON.stringify(rows()));draft.layouts[page]=JSON.parse(undo.pop());sel=null;changed();renderLayout();}
   function doRedo(){if(!redo.length)return;undo.push(JSON.stringify(rows()));draft.layouts[page]=JSON.parse(redo.pop());sel=null;changed();renderLayout();}
-  function tabsHtml(){return '<div class="tabs">'+['overview'].concat(D.cats.map(function(c){return c[0];})).map(function(k){return '<a href="#/rozvrzeni/'+k+'" class="'+(k===page?'on':'')+'">'+CAT[k]+'</a>';}).join('')+'</div>';}
+  function tabsHtml(){return '<div class="tabs">'+['overview'].concat(D.cats.map(function(c){return c[0];})).map(function(k){return '<a href="/admin/rozvrzeni/'+k+'" class="'+(k===page?'on':'')+'">'+CAT[k]+'</a>';}).join('')+'</div>';}
   function modeSeg(){return '<span class="seg" id="modeSeg" title="Způsob úprav: plátno, nebo seznam s posuvníky"><button type="button" data-mode="canvas" aria-pressed="'+(MODE==='canvas')+'">'+IC.canvas+'Plátno</button><button type="button" data-mode="basic" aria-pressed="'+(MODE==='basic')+'">'+IC.sliders+'Seznam</button></span>';}
   function bindMode(){$$('#modeSeg [data-mode]').forEach(function(b){b.onclick=function(){MODE=b.dataset.mode;LS.set('lh-mode',MODE);pgLayout(page);};});}
   function pushPreview(){frames.forEach(function(f){if(f._ready)f.contentWindow.postMessage({type:'lh-site',site:draft,route:f._route},'*');});setTimeout(measureFrames,120);setTimeout(measureFrames,700);}
@@ -1044,7 +1054,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   function autoscroll(x,y){var cv=$('cv');if(!cv)return;var r=cv.getBoundingClientRect();asV.y=y<r.top+50?-16:y>r.bottom-50?16:0;asV.x=x<r.left+50?-16:x>r.right-50?16:0;if((asV.x||asV.y)&&!asT){asT=setInterval(function(){cv.scrollTop+=asV.y;cv.scrollLeft+=asV.x;},16);}if(!asV.x&&!asV.y)stopAuto();}
   function stopAuto(){clearInterval(asT);asT=null;}
   addEventListener('keydown',function(e){
-    if(!/#\/rozvrzeni/.test(location.hash)||$('app').hidden)return;
+    if(!/^rozvrzeni/.test(apath())||$('app').hidden)return;
     if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
     if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?doRedo():doUndo();return;}
     if(!sel)return;
@@ -1163,7 +1173,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       var finish=function(){
         bar.firstChild.style.width='100%';pub=LH.clone(draft);log=[];LS.set(P+'log',log);doGuide('publish');status();
         m.querySelector('.dlg').innerHTML='<h3>Hotovo, web je aktualizovaný</h3><p class="muted">Kdyby něco nesedělo, předchozí verzi vrátíš v Historii.</p><div class="acts"><button class="btn" type="button" data-close>Zavřít</button><a class="btn pri" href="'+WEB+'" target="_blank" rel="noopener">Otevřít web</a></div>';
-        if(/prehled/.test(location.hash||'#/prehled'))pgHome();
+        if(/^(prehled)?$/.test(apath()))pgHome();
       };
       if(OFFLINE){LS.set(P+'pub',draft);hist.unshift({t:Date.now(),msgs:msgs,snap:LH.clone(draft)});hist=hist.slice(0,HIST_KEEP);LS.set(P+'hist',hist);setTimeout(finish,500);return;}
       clearTimeout(saveT);

@@ -112,6 +112,8 @@ export default {
         return new Response(value, { headers: { 'content-type': (metadata && metadata.type) || 'image/webp', 'cache-control': 'public, max-age=31536000, immutable' } });
       }
       if (url.pathname === '/admin') return Response.redirect(url.origin + '/admin/', 301);
+      /* clean admin URLs (/admin/projekty) all load the admin page; files keep their own path */
+      if (url.pathname.startsWith('/admin/') && url.pathname !== '/admin/' && !/\.[a-z0-9]+$/i.test(url.pathname)) return env.ASSETS.fetch(new Request(url.origin + '/admin/', req));
       return env.ASSETS.fetch(req);
     } catch (e) {
       return json({ error: 'Chyba serveru: ' + (e && e.message || e) }, 500);
