@@ -72,6 +72,13 @@ async function api(req, env, url) {
     await Promise.all(drop.map(h => env.KV.delete(h.key)));
     return json({ ok: true, hist });
   }
+  if (p === '/api/hist/clear' && m === 'POST') {
+    let hist = await readJSON(env, 'hist', []);
+    const drop = hist.slice(1); hist = hist.slice(0, 1);   // keep only the live version
+    await env.KV.put('hist', JSON.stringify(hist));
+    await Promise.all(drop.map(h => env.KV.delete(h.key)));
+    return json({ ok: true, hist });
+  }
   if (p === '/api/restore' && m === 'POST') {
     const b = await req.json(); const snap = await env.KV.get(String(b.key || ''));
     if (!snap) return json({ error: 'Verze už není k dispozici.' }, 404);

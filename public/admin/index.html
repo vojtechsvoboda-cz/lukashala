@@ -182,7 +182,7 @@ button.status{background:none;border:0;padding:4px 6px;border-radius:7px;cursor:
 .infob{position:fixed;right:24px;bottom:24px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line-2);background:#fff;font:600 14px/1 var(--serif);font-style:italic;color:var(--fg-2);box-shadow:0 6px 16px -8px rgba(0,0,0,.3);z-index:40}
 .infob:hover{color:var(--fg);border-color:#9b9a95}
 .infop{position:fixed;right:24px;bottom:70px;width:min(320px,calc(100vw - 48px));background:#fff;border:1px solid var(--line-2);border-radius:14px;box-shadow:0 20px 50px -20px rgba(0,0,0,.35);padding:16px 18px;z-index:41;display:flex;flex-direction:column;gap:4px;font-size:13px}
-.infop b{font-weight:600;margin-top:6px}.infop b:first-child{margin-top:0}
+.infop b{font-weight:600;margin-top:6px;display:flex;align-items:center;gap:8px}.infop a{color:var(--fg);text-decoration:underline;text-underline-offset:2px}.infop b:first-child{margin-top:0}
 .infop p{color:var(--fg-2);line-height:1.45}
 /* layout editor shell */
 .lay{display:grid;grid-template-columns:minmax(0,1fr) 312px;height:100%;min-height:0}
@@ -555,9 +555,9 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       '</div>'+
       (dirty()?'<div class="card" style="margin-top:12px;padding:16px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="flex:1;min-width:200px"><b>Máš nezveřejněné změny.</b> <span class="muted">Na webu se objeví až po zveřejnění.</span></span><button class="btn pri" type="button" data-pub>Zveřejnit</button></div>':'')+
 '<button type="button" class="infob" id="infoB" aria-label="Informace">i</button><div class="infop" id="infoP" hidden>'+
-        '<b>Jak to tady funguje</b><p>Úpravy se ukládají jako koncept. Na webu se objeví až po kliknutí na Zveřejnit. Předchozí dvě verze najdeš v Historii.</p>'+
-        '<b>Provoz webu</b><p>O hosting, doménu, zálohy a zabezpečení se starám já. '+(NEXT_INVOICE?'Další roční období provozu fakturuji '+esc(NEXT_INVOICE)+'.':'Provoz se fakturuje jednou ročně, vždy rok od spuštění webu.')+'</p>'+
-        '<b>Potřebuješ pomoct?</b><p>Napiš Vojtovi, rád pomůže.</p></div></div>';
+        '<b>Jak to tady funguje</b><p>Úpravy se ukládají jako koncept a na webu se objeví až po kliknutí na Zveřejnit. Dvě předchozí verze najdeš v <a href="#/historie">Historii</a>, kde je můžeš vrátit nebo smazat.</p>'+
+        '<b>Provoz webu <span class="chip">2 400 Kč / rok</span></b><p>V ceně je hosting, doména, zálohy a zabezpečení. '+(NEXT_INVOICE?'Další rok provozu se fakturuje '+esc(NEXT_INVOICE)+'.':'Fakturuje se jednou ročně, vždy rok od spuštění webu.')+'</p>'+
+        '<b>Potřebuješ pomoct?</b><p>Napiš Vojtovi na Instagram <a href="https://instagram.com/vojtechsvoboda.cz" target="_blank" rel="noopener">@vojtechsvoboda.cz</a>, rád pomůže.</p></div></div>';
     $('qNew').onclick=newProject;
     $('infoB').onclick=function(e){e.stopPropagation();$('infoP').hidden=!$('infoP').hidden;};
     $('infoP').onclick=function(e){e.stopPropagation();};
@@ -1139,8 +1139,12 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   function pgHistory(){
     $('title').textContent='Historie';
     $('content').innerHTML='<div class="page"><p class="muted">Při každém zveřejnění se uloží záloha. Kromě verze, která je teď na webu, tu jsou vždy dvě předchozí. Kteroukoliv z nich vrátíš jedním kliknutím.</p>'+
+      (hist.length>1?'<p style="margin-top:12px"><button class="btn sm" type="button" id="histClear">'+IC.trash+'Smazat historii</button></p>':'')+
       (hist.length?'<ul class="card hist" style="margin-top:16px;padding:0">'+hist.slice(0,HIST_KEEP).map(function(h,k){return '<li><span class="dt">'+esc(fmtT(h.t))+'</span><ul>'+(h.msgs.length?h.msgs:['Úpravy obsahu']).map(function(m){return '<li style="list-style:disc;padding:0;border:0">'+esc(m)+'</li>';}).join('')+'</ul>'+(k===0?'<span class="chip">Na webu</span>':'<button class="btn sm" type="button" data-rest="'+k+'">'+IC.undo+'Vrátit tuto verzi</button>')+'</li>';}).join('')+'</ul>'
         :'<div class="card" style="margin-top:16px;padding:20px"><p class="muted">Zatím nic nebylo zveřejněno. Web teď ukazuje výchozí obsah.</p></div>')+'</div>';
+    if($('histClear'))$('histClear').onclick=function(){confirmBox('Smazat historii?','Předchozí verze se smažou a nepůjdou vrátit. Verze, která je teď na webu, zůstane.',function(){
+      if(OFFLINE){hist=hist.slice(0,1);pgHistory();return;}
+      api('/api/hist/clear',{method:'POST',body:{}}).then(function(r){hist=r.hist;toast('Historie je smazaná.');pgHistory();},function(e){toast(esc(e.message));});});};
     $$('[data-rest]').forEach(function(b){b.onclick=function(){
       var h=hist[+b.dataset.rest];
       var applyIt=function(d){draft=d;if(!draft.extra)draft.extra={};note('restore','Vrácená verze z '+fmtT(h.t));save();toast('Verze z '+esc(fmtT(h.t))+' je připravená. Na web se dostane po kliknutí na Zveřejnit.',5000);route();};
