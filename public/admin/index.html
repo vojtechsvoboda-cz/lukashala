@@ -692,7 +692,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   /* ---------- upload: real WebP conversion in the browser, stored on the server ---------- */
   function openUpload(p){
     var m=modal('<h3>Nahrát fotky do „'+esc(p.title)+'“</h3>'+
-      '<div class="drop" id="drop">'+IC.img+'<span>Přetáhni sem fotky z počítače, nebo</span><button class="btn" type="button" id="pickOwn">Vybrat z počítače</button><span class="hint">JPG nebo WebP, delší strana aspoň 2 000 px (víc není potřeba). Web je sám zmenší a převede do WebP.</span></div>'+
+      '<div class="drop" id="drop">'+IC.img+'<span>Přetáhni sem fotky z počítače, nebo</span><button class="btn" type="button" id="pickOwn">Vybrat z počítače</button><span class="hint">JPG nebo WebP, delší strana kolem 2 800 px, do 2,5 MB na fotku. Větší soubory web sám zmenší.</span></div>'+
       '<div class="up" id="upList"></div>'+
       '<div class="acts"><button class="btn" type="button" data-close>Zavřít</button></div>');
     var drop=$('drop');
@@ -740,12 +740,12 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     };
     next(0);
   }
-  /* decode, scale to max 2000 px, encode as WebP (JPEG fallback for browsers without WebP encoding) */
+  /* decode, scale to max 2800 px, encode as WebP (JPEG fallback for browsers without WebP encoding) */
   function convert(file){
     return new Promise(function(res,rej){
       var img=new Image(),u=URL.createObjectURL(file);
       img.onload=function(){
-        var s=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*s),h=Math.round(img.naturalHeight*s);
+        var s=Math.min(1,2800/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*s),h=Math.round(img.naturalHeight*s);
         var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(u);
         c.toBlob(function(b){
           if(b&&b.type==='image/webp')return res({blob:b,w:w,h:h});
