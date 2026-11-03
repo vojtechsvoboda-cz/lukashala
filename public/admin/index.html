@@ -7,7 +7,8 @@
 <title>Administrace · Lukáš Hála</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Libre+Franklin:wght@400&display=swap" rel="stylesheet">
+<style id="lhfont"></style>
 <style id="lhcss"></style>
 <style>
 /* Light, quiet admin that matches the white website.
@@ -150,6 +151,22 @@ select.inp{-webkit-appearance:none;appearance:none;padding-right:38px;cursor:poi
 .th.add{display:grid;place-items:center;cursor:pointer;background:#fafaf8;border:1.5px dashed var(--line-2);color:var(--fg-2);font-weight:500;font-size:13px;text-align:center}
 .th.add:hover{border-color:#9b9a95;color:var(--fg)}
 
+.fpk{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.fpk button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:18px 12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:center;transition:border-color .15s}
+.fpk button:hover{border-color:#bdbcb7}
+.fpk button[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
+.fpk b{font-size:28px;line-height:1.15;font-weight:400}
+.fpk i{font-size:18px;line-height:1.3}
+.fpk small{margin-top:8px;font-size:11.5px;color:var(--fg-3);line-height:1.35}
+@media (max-width:900px){.fpk{grid-template-columns:1fr}}
+.know{padding:0}
+.know details{border-top:1px solid var(--line)}
+.know details:first-child{border-top:0}
+.know summary{cursor:pointer;list-style:none;padding:14px 18px;font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.know summary::-webkit-details-marker{display:none}
+.know summary::after{content:"+";color:var(--fg-3);font-size:18px;line-height:1}
+.know details[open] summary::after{content:"–"}
+.know p{padding:0 18px 16px;color:var(--fg-2);max-width:68ch}
 /* layout editor shell */
 .lay{display:grid;grid-template-columns:minmax(0,1fr) 312px;height:100%;min-height:0}
 .lay-l{display:flex;flex-direction:column;min-width:0;min-height:0}
@@ -361,7 +378,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   var esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var LS={get:function(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}};
   /* ?demo=1: try-out admin that keeps everything in this browser and never touches the live site */
-  var DEMO=/[?&]demo=1/.test(location.search),P=DEMO?'lhdemo-':'lh-',WEB=DEMO?'/?demo=1':'/';
+  var DEMO=false,P='lh-',WEB='/';
   var qMode=(/[?&]mode=(canvas|basic)/.exec(location.search)||[])[1];
   var MODE=qMode||LS.get('lh-mode')||'canvas';
   /* admin calls the overview page "Homepage"; the website itself keeps "Overview" in its menu */
@@ -466,7 +483,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       boot();
     });
   }
-  function boot(){$('login').hidden=true;$('app').hidden=false;$('offline').hidden=!OFFLINE;route();status();}
+  function boot(){applyFont();$('login').hidden=true;$('app').hidden=false;$('offline').hidden=!OFFLINE;route();status();}
   function start(){
     if(DEMO){OFFLINE=true;pub=LS.get(P+'pub');hist=LS.get(P+'hist')||[];
       var go=function(base){draft=LS.get(P+'draft')||LH.clone(pub||base||LH.defaultSite());if(!draft.extra)draft.extra={};if(!pub&&base)pub=base;boot();};
@@ -481,7 +498,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
   /* ---------- shell ---------- */
   function navHtml(cur){
-    var n=[['prehled','Přehled',IC.home],['projekty','Projekty',IC.folder,draft.projects.length],['rozvrzeni','Rozvržení stránek',IC.grid],['texty','Texty a kontakt',IC.text],['historie','Historie',IC.clock]];
+    var n=[['prehled','Přehled',IC.home],['projekty','Projekty',IC.folder,draft.projects.length],['rozvrzeni','Rozvržení stránek',IC.grid],['texty','Texty a písmo',IC.text],['historie','Historie',IC.clock]];
     $('nav').innerHTML=n.map(function(x){return '<a href="#/'+x[0]+'" class="'+(cur===x[0]?'on':'')+'">'+x[2]+x[1]+(x[3]?'<span class="n">'+x[3]+'</span>':'')+'</a>';}).join('');
   }
   function route(){
@@ -498,6 +515,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   }
   addEventListener('hashchange',function(){if(!$('app').hidden)route();});
 
+  function applyFont(){var st=$('lhfont');if(st)st.textContent=LH.fontCss(draft,'.board .bm h1,.board .bm em');}
   /* ---------- přehled ---------- */
   function pgHome(){
     $('title').textContent='Přehled';
@@ -510,10 +528,16 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         card('button','type="button" id="qNew"',IC.plus,'Nový projekt','Založ projekt, vyber klienta a nahraj fotky.','pri')+
         card('a','href="#/rozvrzeni/overview"',IC.home,'Upravit homepage','Vyber fotky na úvodní stránku a poskládej je.')+
         card('a','href="#/rozvrzeni/'+(guide.lastCat||'sport')+'"',IC.grid,'Rozvržení kategorií','Velikost a pořadí fotek na stránkách Portrait, Fashion, Sport a Automotive.')+
-        card('a','href="#/texty"',IC.text,'Upravit texty','Text o tobě, klienti, e-mail a Instagram.')+
+        card('a','href="#/texty"',IC.text,'Texty a písmo','Text o tobě, klienti, kontakt a písmo jména.')+
       '</div>'+
       (dirty()?'<div class="card" style="margin-top:12px;padding:16px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="flex:1;min-width:200px"><b>Máš nezveřejněné změny.</b> <span class="muted">Na webu se objeví až po zveřejnění.</span></span><button class="btn pri" type="button" data-pub>Zveřejnit</button></div>':'')+
-      '</div>';
+      '<h3>Dobré vědět</h3><div class="card know">'+
+        '<details><summary>Co je v ročním provozu</summary><p>Hosting, doména, zálohy, zabezpečení a administrace. Když se něco pokazí, vyřeším to. První rok je v ceně webu, potom 2 400 Kč ročně (200 Kč měsíčně), fakturuju jednou ročně.</p></details>'+
+        '<details><summary>Když budeš chtít s něčím pomoct</summary><p>Napiš mi, co a kde upravit. Drobnost do půl hodiny je za 400 Kč, větší úprava třeba s novým rozvržením za 800 Kč. Klidně se u toho potkáme, nebo si dáme rychlý Google Meet.</p></details>'+
+        '<details><summary>Jak to tady funguje</summary><p>Všechno, co tu upravíš, se ukládá jako koncept. Na webu se objeví až po kliknutí na Zveřejnit. Předchozí dvě verze najdeš v Historii, kdyby se něco nepovedlo. Fotky se při nahrání samy zmenší.</p></details>'+
+        '<details><summary>Komu web patří</summary><p>Tobě, včetně domény na tvoje jméno. Ke všemu dostaneš předávací protokol s přístupy a popisem, co kde běží.</p></details>'+
+        '<details><summary>Písmo jména</summary><p>Reference používá placené písmo Canela, které cíleně nepoužíváme. Výchozí je Instrument Serif a v Textech a písmu si můžeš vybrat ze čtyř podobných.</p></details>'+
+      '</div></div>';
     $('qNew').onclick=newProject;
     var pb=$('content').querySelector('[data-pub]');if(pb)pb.onclick=openPublish;
   }
@@ -1063,7 +1087,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
   /* ---------- texty ---------- */
   function pgTexts(){
-    $('title').textContent='Texty a kontakt';
+    $('title').textContent='Texty a písmo';
     var i=draft.info;
     $('content').innerHTML='<div class="split"><div class="content" style="border-right:1px solid var(--line)"><div class="page">'+
       '<p class="muted">Texty pro stránku Info („Work with me“) a patičku webu.</p>'+
@@ -1072,10 +1096,13 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       '<label class="field"><span>Instagram</span><input class="inp" id="t-ig" data-i="instagram" value="'+esc(i.instagram)+'"></label></div>'+
       '<h3>Vybraní klienti</h3><div class="tags">'+i.clients.map(function(c,k){return '<span>'+esc(c)+'<button type="button" data-rmc="'+k+'" aria-label="Odebrat">'+IC.x+'</button></span>';}).join('')+'</div>'+
       '<div style="display:flex;gap:8px;margin-top:10px;max-width:420px"><input class="inp" id="newC" placeholder="Přidat klienta, např. Adidas"><button class="btn" type="button" id="addC">Přidat</button></div>'+
-      '</div></div><div class="lay-r"><div class="pane" style="flex:1"><h4>Náhled stránky Info</h4><div class="pvwrap" id="tBox"></div></div></div></div>';
+      '<h3>Písmo jména</h3><p class="muted" style="max-width:60ch">Reference používá placené písmo Canela, které cíleně nepoužíváme. Výchozí je Instrument Serif, nejbližší bezplatná varianta. Kliknutím se změní jméno i podnadpis na celém webu.</p>'+
+      '<div class="fpk" id="fpk">'+LH.FONTS.map(function(f){return '<button type="button" data-font="'+f.id+'" aria-pressed="'+(LH.font(draft).id===f.id)+'"><b style="font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w+'">Lukáš Hála</b><i style="font-family:'+f.fam+',Georgia,serif;font-weight:'+f.w+'">Imaginis Production</i><small>'+f.name+' · '+f.info+'</small></button>';}).join('')+'</div>'+
+'</div></div><div class="lay-r"><div class="pane" style="flex:1"><h4>Náhled stránky Info</h4><div class="pvwrap" id="tBox"></div></div></div></div>';
     frames=[];var box=$('tBox');box.innerHTML='<div class="pv-d dev" style="width:'+(390*.7+20)+'px;height:'+(844*.7+20)+'px"></div>';
     var f=mkFrame('info',390,844,false);f.style.transform='scale(.7)';box.firstChild.appendChild(f);
     $$('[data-i]').forEach(function(inp){inp.addEventListener('input',function(){i[inp.dataset.i]=inp.value;note('info','Texty a kontakt');save();});});
+    $$('[data-font]').forEach(function(b){b.onclick=function(){draft.font=b.dataset.font;applyFont();note('font','Písmo jména: '+LH.font(draft).name);save();$$('[data-font]').forEach(function(x){x.setAttribute('aria-pressed',x===b);});};});
     $$('[data-rmc]').forEach(function(b){b.onclick=function(){i.clients.splice(+b.dataset.rmc,1);note('info','Texty a kontakt');save();pgTexts();};});
     var add=function(){var v=$('newC').value.trim();if(!v)return;i.clients.push(v);note('info','Texty a kontakt');save();pgTexts();};
     $('addC').onclick=add;$('newC').onkeydown=function(e){if(e.key==='Enter')add();};

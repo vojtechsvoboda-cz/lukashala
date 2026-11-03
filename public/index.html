@@ -6,7 +6,8 @@
 <title>Lukáš Hála · Photography</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Libre+Franklin:wght@400;500&display=swap" rel="stylesheet">
+<style id="lhfont"></style>
 <style id="lhcss"></style>
 <style>
 /* Editorial portfolio after emeisdeubel.com: centered masthead, comma category nav, bottom-aligned rows of photos in size steps */
@@ -114,6 +115,7 @@ body.viewing{overflow:hidden}
   function hidePhoto(){var had=!!(ov&&ov.innerHTML);if(ov){ov.innerHTML='';}document.body.classList.remove('viewing');document.onkeydown=null;if(had)window.scrollTo(0,keepY);}
   function render(fade){
     var r=route(),page=r.cat;
+    document.getElementById('lhfont').textContent=LH.fontCss(site);
     nav(r.cat); foot(r.cat);
     if(r.photo){ if(last!==page){main.innerHTML=grid(page);last=page;} showPhoto(r); return; }
     var wasPhoto=!!(ov&&ov.innerHTML);hidePhoto();
@@ -132,8 +134,6 @@ body.viewing{overflow:hidden}
   });
   /* published content from the server; the built-in default is used if nothing is published yet */
   if(PREVIEW){render(false);parent.postMessage({type:'lh-ready'},'*');}
-  /* ?demo=1: show what the try-out admin published in this browser (nothing is sent to the server) */
-  else if(/[?&]demo=1/.test(location.search)&&(function(){try{var dl=JSON.parse(localStorage.getItem('lhdemo-pub')||'null');if(dl&&dl.v===1){site=dl;return true;}}catch(e){}return false;})()){render(false);}
   else{
     var done=false,first=function(){if(!done){done=true;render(false);}};
     setTimeout(first,1500);

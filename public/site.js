@@ -71,6 +71,15 @@
     '.lh-ph img{display:block;width:100%;height:auto;background:#f1f0ee}'+
     '@media (max-width:700px){.lh-rows{width:calc(100vw - 32px)}.lh-row{flex-wrap:wrap;row-gap:16px;column-gap:4%;margin-bottom:34px}'+
     '.lh-ph{flex-basis:calc(var(--mw)*1%);width:calc(var(--mw)*1%)}.lh-row[data-a="j"]{justify-content:center}}';
-  window.LH={D:D,SZ:SZ,GAP:GAP,SIZES:SIZES,MINW:MINW,MAXW:MAXW,clone:clone,dim:dim,src:src,portrait:portrait,width:width,mobileWidth:mobileWidth,stepOf:stepOf,
+  /* fonts for the name; chosen in the admin (Texty a kontakt), stored as site.font */
+  var FONTS=[
+    {id:'instrument',name:'Instrument Serif',fam:"'Instrument Serif'",w:400,info:'Regular 400 + Italic 400 · výchozí, nejblíž referenci'},
+    {id:'cormorant',name:'Cormorant',fam:"'Cormorant Garamond'",w:500,info:'Medium 500 + Medium Italic 500 · jemný, elegantní'},
+    {id:'fraunces',name:'Fraunces',fam:"'Fraunces'",w:400,info:'Regular 400 + Italic 400 · modernější, výraznější'},
+    {id:'newsreader',name:'Newsreader',fam:"'Newsreader'",w:400,info:'Regular 400 + Italic 400 · klidný, časopisový'}
+  ];
+  function font(site){var id=site&&site.font;for(var i=0;i<FONTS.length;i++)if(FONTS[i].id===id)return FONTS[i];return FONTS[0];}
+  function fontCss(site,sel){var f=font(site);return (sel||'.mast h1,.mast em')+'{font-family:'+f.fam+',Georgia,serif!important;font-weight:'+f.w+'!important}';}
+  window.LH={FONTS:FONTS,font:font,fontCss:fontCss,D:D,SZ:SZ,GAP:GAP,SIZES:SIZES,MINW:MINW,MAXW:MAXW,clone:clone,dim:dim,src:src,portrait:portrait,width:width,mobileWidth:mobileWidth,stepOf:stepOf,
     projectOf:projectOf,catPhotos:catPhotos,packRows:packRows,defaultSite:defaultSite,syncLayout:syncLayout,rowWidth:rowWidth,rowsHtml:rowsHtml,CSS:CSS};
 })();
