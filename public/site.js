@@ -82,7 +82,7 @@
   /* on the website the chosen face replaces --serif everywhere (name, Info text); in the admin only the given selector */
   function fontCss(site,sel){var f=font(site);
     if(sel)return sel+'{font-family:'+f.fam+',Georgia,serif!important;font-weight:'+f.w+'!important}';
-    return ':root{--serif:'+f.fam+',Georgia,serif}.mast h1,.mast em,.info p.bio{font-weight:'+f.w+'!important}';}
+    return 'html:root{--serif:'+f.fam+',Georgia,serif}.mast h1,.mast em,.info p.bio{font-weight:'+f.w+'!important}';}
   /* clean up content saved before later changes: old e-mail, swapped company name, photos that were removed */
   function fixLegacy(site){
     if(!site||!site.info)return site;

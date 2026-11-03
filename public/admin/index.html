@@ -240,9 +240,9 @@ button.status{background:none;border:0;padding:4px 6px;border-radius:7px;cursor:
 .rplus{position:absolute;right:-96px;top:50%;width:66px;height:66px;margin-top:-33px;border-radius:50%;background:#fff;border:3px solid var(--sel);color:var(--sel);display:grid;place-items:center;opacity:0;transition:opacity .15s;cursor:pointer}
 .rplus svg{width:30px;height:30px}
 .lh-row:hover .rplus,.lh-row.rsel .rplus{opacity:1}
-.rtool{position:absolute;left:-96px;bottom:0;display:flex;opacity:0;transition:opacity .15s;font-family:var(--ui);letter-spacing:0}
+.rtool{position:absolute;left:-96px;top:50%;transform:translateY(-50%);display:flex;opacity:0;transition:opacity .15s;font-family:var(--ui);letter-spacing:0}
 .lh-row:hover .rtool,.lh-row.rsel .rtool{opacity:1}
-.rtool .seg{flex-direction:column;transform:scale(1.5);transform-origin:0 100%}
+.rtool .seg{flex-direction:column;transform:scale(1.5);transform-origin:0 50%}
 .ind{position:absolute;background:var(--sel);border-radius:4px;pointer-events:none;z-index:5}
 .ind.h::after{content:"Nový řádek";position:absolute;left:50%;top:-38px;transform:translateX(-50%);background:var(--sel);color:#fff;font:600 19px/1 var(--ui);letter-spacing:0;padding:8px 12px;border-radius:9px;white-space:nowrap}
 .ghost{position:fixed;z-index:999;pointer-events:none;opacity:.88;box-shadow:0 20px 40px -10px rgba(0,0,0,.45);transform:rotate(-1.5deg);border-radius:3px;overflow:hidden}
@@ -386,7 +386,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   </section>
 </div>
 <div class="toast" id="toast" role="status"></div>
-<input type="file" id="file" accept="image/*" multiple hidden>
+<input type="file" id="file" accept="image/jpeg,image/webp,.jpg,.jpeg,.webp" multiple hidden>
 <script src="/data.js"></script>
 <script src="/site.js"></script>
 <script>
@@ -692,16 +692,16 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   /* ---------- upload: real WebP conversion in the browser, stored on the server ---------- */
   function openUpload(p){
     var m=modal('<h3>Nahrát fotky do „'+esc(p.title)+'“</h3>'+
-      '<div class="drop" id="drop">'+IC.img+'<span>Přetáhni sem fotky z počítače, nebo</span><button class="btn" type="button" id="pickOwn">Vybrat z počítače</button><span class="hint">JPG nebo PNG, ideálně do 5 MB na fotku. Na webu se samy zmenší a převedou do WebP, větší soubory web nevylepší.</span></div>'+
+      '<div class="drop" id="drop">'+IC.img+'<span>Přetáhni sem fotky z počítače, nebo</span><button class="btn" type="button" id="pickOwn">Vybrat z počítače</button><span class="hint">JPG nebo WebP, delší strana aspoň 2 000 px (víc není potřeba). Web je sám zmenší a převede do WebP.</span></div>'+
       '<div class="up" id="upList"></div>'+
       '<div class="acts"><button class="btn" type="button" data-close>Zavřít</button></div>');
     var drop=$('drop');
     $('pickOwn').onclick=function(){var f=$('file');f.value='';f.onchange=function(){runUploads(p,[].slice.call(f.files).map(fileItem),m);};f.click();};
     drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('over');});
     drop.addEventListener('dragleave',function(){drop.classList.remove('over');});
-    drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('over');var fs=[].slice.call(e.dataTransfer.files).filter(function(f){return /^image\//.test(f.type);});if(fs.length)runUploads(p,fs.map(fileItem),m);});
+    drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('over');var fs=[].slice.call(e.dataTransfer.files).filter(function(f){return /^image\/(jpeg|webp)$/.test(f.type);});if(fs.length)runUploads(p,fs.map(fileItem),m);});
   }
-  function fileItem(f){return {name:f.name,orig:(f.size/1048576).toFixed(1).replace('.',',')+' MB',file:f,big:f.size>20*1048576};}
+  function fileItem(f){return {name:f.name,orig:(f.size/1048576).toFixed(1).replace('.',',')+' MB',file:f,big:f.size>20*1048576,fmt:!/^image\/(jpeg|webp)$/.test(f.type)};}
   function fmtKB(b){return b>1048576?(b/1048576).toFixed(1).replace('.',',')+' MB':Math.round(b/1024)+' kB';}
   function runUploads(p,items,m){
     var list=$('upList');list.innerHTML='';
@@ -719,7 +719,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         p.photos.push(id);fin();
       };
       var bad=function(msg){row.querySelector('small').textContent=msg;row.querySelector('i').style.background='#b42318';fin();};
-      if(it.big){bad('Soubor má víc než 20 MB. Zmenši ho prosím, ideálně pod 5 MB.');}
+      if(it.fmt){bad('Nahraj prosím JPG nebo WebP.');}
+      else if(it.big){bad('Soubor má víc než 20 MB. Zmenši ho prosím, ideálně pod 5 MB.');}
       else{
         convert(it.file).then(function(r){
           row.querySelector('small').textContent=it.orig+' → WebP '+fmtKB(r.blob.size)+', nahrávám…';row.querySelector('i').style.width='75%';
