@@ -556,7 +556,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       (dirty()?'<div class="card" style="margin-top:12px;padding:16px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="flex:1;min-width:200px"><b>Máš nezveřejněné změny.</b> <span class="muted">Na webu se objeví až po zveřejnění.</span></span><button class="btn pri" type="button" data-pub>Zveřejnit</button></div>':'')+
 '<button type="button" class="infob" id="infoB" aria-label="Informace">i</button><div class="infop" id="infoP" hidden>'+
         '<b>Jak to tady funguje</b><p>Úpravy se ukládají jako koncept a na webu se objeví až po kliknutí na Zveřejnit. Dvě předchozí verze najdeš v <a href="#/historie">Historii</a>, kde je můžeš vrátit nebo smazat.</p>'+
-        '<b>Provoz webu <span class="chip">2 200 Kč / rok</span></b><p>V ceně je hosting, zálohy a zabezpečení. Doména se platí zvlášť. '+(NEXT_INVOICE?'Další rok provozu se fakturuje '+esc(NEXT_INVOICE)+'.':'Fakturuje se jednou ročně, vždy rok od spuštění webu.')+'</p>'+
+        '<b>Provoz webu <span class="chip">2 400 Kč / rok</span></b><p>V ceně je hosting, zálohy a zabezpečení. Doména se platí zvlášť. '+(NEXT_INVOICE?'Další rok provozu se fakturuje '+esc(NEXT_INVOICE)+'.':'Fakturuje se jednou ročně, vždy rok od spuštění webu.')+'</p>'+
         '<b>Potřebuješ pomoct?</b><p>Napiš Vojtovi na Instagram <a href="https://instagram.com/vojtechsvoboda.cz" target="_blank" rel="noopener">@vojtechsvoboda.cz</a>, rád pomůže.</p></div></div>';
     $('qNew').onclick=newProject;
     $('infoB').onclick=function(e){e.stopPropagation();$('infoP').hidden=!$('infoP').hidden;};
